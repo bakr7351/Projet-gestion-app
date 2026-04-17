@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inscription | Espace utilisateur</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="auth-page">
+      <section class="auth-card" aria-labelledby="page-title">
+        <header class="brand">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <h1 id="page-title" class="auth-title">Inscription</h1>
+          <p class="auth-subtitle">Créez votre compte. Un email d’activation vous sera envoyé.</p>
+        </header>
+
+        <form class="form" action="#" method="post">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="last_name">Nom</label>
+              <input
+                id="last_name"
+                name="last_name"
+                type="text"
+                autocomplete="family-name"
+                placeholder="ex: Benali"
+                required
+              />
+              <p class="field-error" role="status">Le nom est obligatoire.</p>
+            </div>
+
+            <div class="form-group">
+              <label for="first_name">Prénom</label>
+              <input
+                id="first_name"
+                name="first_name"
+                type="text"
+                autocomplete="given-name"
+                placeholder="ex: Amina"
+                required
+              />
+              <p class="field-error" role="status">Le prénom est obligatoire.</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              placeholder="ex: nom@domaine.com"
+              required
+            />
+            <p class="field-error" role="status">Veuillez entrer un email valide.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Mot de passe</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="new-password"
+              placeholder="Minimum 8 caractères"
+              minlength="8"
+              required
+            />
+            <p class="field-error" role="status">Minimum 8 caractères.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="password_confirm">Confirmation du mot de passe</label>
+            <input
+              id="password_confirm"
+              name="password_confirm"
+              type="password"
+              autocomplete="new-password"
+              placeholder="Répétez votre mot de passe"
+              minlength="8"
+              required
+            />
+            <p class="field-error" role="status">La confirmation est obligatoire.</p>
+          </div>
+
+          <p class="form-hint">
+            Mot de passe: au minimum 8 caractères. Après inscription, affichez: « Vérifiez votre boîte mail pour
+            activer votre compte ».
+          </p>
+
+          <div class="alert alert-info" role="status" aria-live="polite">
+            Vérifiez votre boîte mail pour activer votre compte.
+          </div>
+
+          <button class="btn btn-primary btn-block" type="submit">S’inscrire</button>
+        </form>
+
+        <div class="auth-links">
+          <span class="muted">Déjà un compte ? <a class="link" href="./login.html">Se connecter</a></span>
+          <span class="muted"><a class="link" href="./dashboard.html">Voir un exemple du dashboard</a></span>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
+

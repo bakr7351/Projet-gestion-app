@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ajouter / Modifier un item | Espace utilisateur</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="app-layout">
+      <input class="nav-toggle" type="checkbox" id="nav-toggle" />
+      <label class="backdrop" for="nav-toggle" aria-hidden="true"></label>
+
+      <aside class="sidebar" aria-label="Navigation utilisateur">
+        <div class="sidebar-header">
+          <div class="sidebar-title">
+            <strong>Gestion App</strong>
+            <span>Utilisateur</span>
+          </div>
+          <label for="nav-toggle" class="sr-only">Fermer le menu</label>
+        </div>
+
+        <nav class="nav">
+          <a href="./dashboard.html">Dashboard <span class="badge">Accueil</span></a>
+          <a href="./items.html">Mes items <span class="badge">Grille</span></a>
+          <a href="./item-form.html" aria-current="page">Ajouter un item <span class="badge">Form</span></a>
+          <a href="./login.html">Déconnexion <span class="badge">Auth</span></a>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div class="row">
+            <label class="hamburger" for="nav-toggle" aria-label="Ouvrir le menu">
+              <span class="hamburger-lines" aria-hidden="true">
+                <span></span><span></span><span></span>
+              </span>
+            </label>
+            <h1>Ajouter / Modifier un item</h1>
+          </div>
+
+          <div class="row">
+            <a class="btn btn-ghost btn-sm" href="./items.html">Annuler</a>
+            <a class="btn btn-primary btn-sm" href="./items.html">Enregistrer</a>
+          </div>
+        </header>
+
+        <section class="layout-section">
+          <div class="panel form-card">
+            <div class="stack" style="gap: 0.35rem">
+              <h2 style="font-size: 1.05rem; color: var(--primary)">Formulaire stylisé</h2>
+              <p class="muted">Structure sémantique + champs accessibles (labels, focus).</p>
+            </div>
+
+            <div class="divider" style="margin: 1rem 0"></div>
+
+            <form class="form" action="#" method="post">
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="title">Titre</label>
+                  <input id="title" name="title" type="text" placeholder="ex: Ordinateur portable" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="category">Catégorie</label>
+                  <select id="category" name="category" required>
+                    <option value="" selected disabled>Choisir…</option>
+                    <option value="a">Catégorie A</option>
+                    <option value="b">Catégorie B</option>
+                    <option value="c">Catégorie C</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" placeholder="Décrivez l’item…" required></textarea>
+                <span class="form-hint">Conseil: restez court et précis.</span>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="status">Statut</label>
+                  <select id="status" name="status">
+                    <option value="active">Actif</option>
+                    <option value="pending">En attente</option>
+                    <option value="archived">Archivé</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="ref">Référence</label>
+                  <input id="ref" name="ref" type="text" placeholder="ex: ITM-2026-001" />
+                </div>
+              </div>
+
+              <div class="row row-between" style="margin-top: 0.25rem; flex-wrap: wrap">
+                <a class="link" href="./items.html">Retour à la liste</a>
+                <button class="btn btn-primary" type="submit">Enregistrer l’item</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
+

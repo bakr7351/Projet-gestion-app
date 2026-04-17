@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard | Espace utilisateur</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="app-layout">
+      <input class="nav-toggle" type="checkbox" id="nav-toggle" />
+      <label class="backdrop" for="nav-toggle" aria-hidden="true"></label>
+
+      <aside class="sidebar" aria-label="Navigation utilisateur">
+        <div class="sidebar-header">
+          <div class="sidebar-title">
+            <strong>Gestion App</strong>
+            <span>Utilisateur</span>
+          </div>
+          <label for="nav-toggle" class="sr-only">Fermer le menu</label>
+        </div>
+
+        <nav class="nav">
+          <a href="./dashboard.html" aria-current="page">Dashboard <span class="badge">Accueil</span></a>
+          <a href="./items.html">Mes items <span class="badge">Grille</span></a>
+          <a href="./item-form.html">Ajouter un item <span class="badge">Form</span></a>
+          <a href="./login.html">Déconnexion <span class="badge">Auth</span></a>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div class="row">
+            <label class="hamburger" for="nav-toggle" aria-label="Ouvrir le menu">
+              <span class="hamburger-lines" aria-hidden="true">
+                <span></span><span></span><span></span>
+              </span>
+            </label>
+            <h1>Dashboard utilisateur</h1>
+          </div>
+
+          <div class="row">
+            <span class="badge">Compte: Standard</span>
+            <a class="btn btn-ghost btn-sm" href="./items.html">Aller aux items</a>
+          </div>
+        </header>
+
+        <section class="layout-section">
+          <div class="panel stack">
+            <div class="row row-between" style="flex-wrap: wrap;">
+              <div class="stack" style="gap: 0.25rem;">
+                <h2 style="font-size: 1.1rem; color: var(--primary);">Bienvenue</h2>
+                <p class="muted">Ici vous retrouvez un aperçu rapide et vos raccourcis.</p>
+              </div>
+              <a class="btn btn-primary btn-sm" href="./item-form.html">+ Nouvel item</a>
+            </div>
+
+            <div class="divider" role="presentation"></div>
+
+            <div class="items-grid" aria-label="Aperçu des items (exemples)">
+              <article class="item-card">
+                <h3>Item #001</h3>
+                <p class="muted">Exemple de description courte.</p>
+                <div class="item-meta">
+                  <span class="badge">Catégorie A</span>
+                  <span class="badge">Actif</span>
+                </div>
+                <div class="item-actions">
+                  <a class="btn btn-ghost btn-sm" href="./item-form.html">Modifier</a>
+                  <a class="btn btn-primary btn-sm" href="./items.html">Voir la liste</a>
+                </div>
+              </article>
+
+              <article class="item-card">
+                <h3>Item #002</h3>
+                <p class="muted">Une autre carte en preview.</p>
+                <div class="item-meta">
+                  <span class="badge">Catégorie B</span>
+                  <span class="badge">En attente</span>
+                </div>
+                <div class="item-actions">
+                  <a class="btn btn-ghost btn-sm" href="./item-form.html">Modifier</a>
+                  <a class="btn btn-primary btn-sm" href="./items.html">Voir la liste</a>
+                </div>
+              </article>
+
+              <article class="item-card">
+                <h3>Item #003</h3>
+                <p class="muted">Responsive: la grille s’adapte automatiquement.</p>
+                <div class="item-meta">
+                  <span class="badge">Catégorie C</span>
+                  <span class="badge">Archivé</span>
+                </div>
+                <div class="item-actions">
+                  <a class="btn btn-ghost btn-sm" href="./item-form.html">Modifier</a>
+                  <a class="btn btn-primary btn-sm" href="./items.html">Voir la liste</a>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard | Espace utilisateur</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="app-layout">
+      <input class="nav-toggle" type="checkbox" id="nav-toggle" />
+      <label class="backdrop" for="nav-toggle" aria-hidden="true"></label>
+
+      <aside class="sidebar" aria-label="Navigation utilisateur">
+        <div class="sidebar-header">
+          <div class="sidebar-title">
+            <strong>Gestion App</strong>
+            <span>Utilisateur</span>
+          </div>
+          <label for="nav-toggle" class="sr-only">Fermer le menu</label>
+        </div>
+
+        <nav class="nav">
+          <a href="./dashboard.html" aria-current="page">Dashboard <span class="badge">Accueil</span></a>
+          <a href="./items.html">Mes items <span class="badge">Grille</span></a>
+          <a href="./item-form.html">Ajouter un item <span class="badge">Form</span></a>
+          <a href="./login.html">Déconnexion <span class="badge">Auth</span></a>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div class="row">
+            <label class="hamburger" for="nav-toggle" aria-label="Ouvrir le menu">
+              <span class="hamburger-lines" aria-hidden="true">
+                <span></span><span></span><span></span>
+              </span>
+            </label>
+            <h1>Dashboard utilisateur</h1>
+          </div>
+
+          <div class="row">
+            <span class="badge">Compte: Standard</span>
+            <a class="btn btn-ghost btn-sm" href="./items.html">Aller aux items</a>
+          </div>
+        </header>
+
+        <section class="layout-section">
+          <div class="panel stack">
+            <div class="row row-between">
+              <div class="stack" style="gap: 0.25rem;">
+                <h2 style="font-size: 1.1rem; color: var(--primary);">Bienvenue</h2>
+                <p class="muted">Ici vous retrouvez un aperçu rapide et vos raccourcis.</p>
+              </div>
+              <a class="btn btn-primary btn-sm" href="./item-form.html">+ Nouvel item</a>
+            </div>
+
+            <div class="divider" role="presentation"></div>
+
+            <div class="items-grid" aria-label="Aperçu des items (exemples)">
+              <article class="item-card">
+                <h3>Item #001</h3>
+                <p class="muted">Exemple de description courte.</p>
+                <div class="item-meta">
+                  <span class="badge">Catégorie A</span>
+                  <span class="badge">Actif</span>
+                </div>
+                <div class="item-actions">
+                  <a class="btn btn-ghost btn-sm" href="./item-form.html">Modifier</a>
+                  <a class="btn btn-primary btn-sm" href="./items.html">Voir la liste</a>
+                </div>
+              </article>
+
+              <article class="item-card">
+                <h3>Item #002</h3>
+                <p class="muted">Une autre carte en preview.</p>
+                <div class="item-meta">
+                  <span class="badge">Catégorie B</span>
+                  <span class="badge">En attente</span>
+                </div>
+                <div class="item-actions">
+                  <a class="btn btn-ghost btn-sm" href="./item-form.html">Modifier</a>
+                  <a class="btn btn-primary btn-sm" href="./items.html">Voir la liste</a>
+                </div>
+              </article>
+
+              <article class="item-card">
+                <h3>Item #003</h3>
+                <p class="muted">Responsive: la grille s’adapte automatiquement.</p>
+                <div class="item-meta">
+                  <span class="badge">Catégorie C</span>
+                  <span class="badge">Archivé</span>
+                </div>
+                <div class="item-actions">
+                  <a class="btn btn-ghost btn-sm" href="./item-form.html">Modifier</a>
+                  <a class="btn btn-primary btn-sm" href="./items.html">Voir la liste</a>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
+
