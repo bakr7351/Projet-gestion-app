@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Historique — Absorption</title>
+  <link rel="stylesheet" href="/css/user.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <style>
+    /* ── Tabs ─────────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0;
+    }
+    .tab-btn {
+      padding: .65rem 1.4rem;
+      border: none;
+      background: none;
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: color .2s, border-color .2s;
+      border-radius: 0;
+    }
+    .tab-btn:hover { color: var(--primary); }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Filter bar ───────────────────────────────────────── */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .filter-bar label {
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .filter-bar select {
+      padding: .5rem .9rem;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: .9rem;
+      background: var(--card);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+    .filter-bar select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    /* ── Toolbar (filter + delete-all) ───────────────────── */
+    .calc-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: .75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    /* ── Pagination ───────────────────────────────────────── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .75rem;
+      margin-top: 1.25rem;
+    }
+    .pagination .page-info {
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--muted);
+      min-width: 90px;
+      text-align: center;
+    }
+
+
+
+    /* ── Type badge ───────────────────────────────────────── */
+    .badge-absorption  { background: #dbeafe; color: #1d4ed8; }
+    .badge-desorption  { background: #fce7f3; color: #9d174d; }
+    .badge-mccabe      { background: #d1fae5; color: #065f46; }
+    .badge-cross       { background: #fef3c7; color: #92400e; }
+    .badge-counter     { background: #e0e7ff; color: #3730a3; }
+
+    /* ── Key params / results cell ────────────────────────── */
+    .params-cell {
+      font-size: .8rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .params-cell strong { color: var(--text); }
+
+    /* ── Action buttons group ─────────────────────────────── */
+    .action-group {
+      display: flex;
+      gap: .4rem;
+      flex-wrap: wrap;
+    }
+
+    /* ── Danger button ────────────────────────────────────── */
+    .btn-danger {
+      background: transparent;
+      border: 2px solid var(--danger);
+      color: var(--danger);
+    }
+    .btn-danger:hover {
+      background: #fee2e2;
+      transform: translateY(-1px);
+    }
+
+    /* ── Success button ───────────────────────────────────── */
+    .btn-success {
+      background: transparent;
+      border: 2px solid var(--success);
+      color: var(--success);
+    }
+    .btn-success:hover {
+      background: #dcfce7;
+      transform: translateY(-1px);
+    }
+
+    /* ── Empty / loading state ────────────────────────────── */
+    .state-row td {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="/user/dashboard.html" class="brand">🔬 <span>Absorption</span></a>
+    <nav>
+      <a href="/user/dashboard.html">Dashboard</a>
+      <a href="/user/profile.html">Profil</a>
+      <a href="/user/history.html" class="active">Historique</a>
+    </nav>
+    <div class="user-menu">
+      <button class="theme-toggle-inline" onclick="toggleTheme()" title="Changer le thème">🌙</button>
+      <div class="user-avatar" id="avatarInitial">?</div>
+      <button class="btn-logout" id="logoutBtn">Déconnexion</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1>📋 Mon historique</h1>
+      <p>Consultez vos calculs sauvegardés et les actions liées à votre compte.</p>
+    </div>
+
+    <div id="alert" class="alert"></div>
+
+    <!-- ── Tabs ──────────────────────────────────────────── -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="calculs">
+        <i class="fas fa-calculator"></i> Calculs
+      </button>
+      <button class="tab-btn" data-tab="compte">
+        <i class="fas fa-user-shield"></i> Compte
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         TAB 1 — Calculs
+    ══════════════════════════════════════════════════════ -->
+    <div class="tab-panel active" id="tab-calculs">
+      <div class="card">
+        <div class="calc-toolbar">
+          <!-- Filter -->
+          <div class="filter-bar">
+            <label for="typeFilter"><i class="fas fa-filter"></i> Type :</label>
+            <select id="typeFilter">
+              <option value="">Tous les types</option>
+              <option value="absorption">Absorption (tous modes)</option>
+              <option value="absorption-counter">Absorption — Contre-courant</option>
+              <option value="absorption-cross">Absorption — Courant croisé</option>
+              <option value="desorption">Désorption (tous modes)</option>
+              <option value="desorption-counter">Désorption — Contre-courant</option>
+              <option value="desorption-cross">Désorption — Courant croisé</option>
+            </select>
+          </div>
+          <!-- Delete all -->
+          <button class="btn btn-danger btn-sm" id="deleteAllBtn">
+            <i class="fas fa-trash-alt"></i> Tout supprimer
+          </button>
+        </div>
+
+        <div class="table-wrapper">
+          <table id="calcTable">
+            <thead>
+              <tr>
+                <th>Nom / Type</th>
+                <th>Paramètres clés</th>
+                <th>Résultats clés</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="calcBody">
+              <tr class="state-row">
+                <td colspan="5">
+                  <i class="fas fa-spinner fa-spin"></i> Chargement…
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="calcPagination" style="display:none;">
+          <button class="btn btn-outline btn-sm" id="prevBtn" disabled>
+            <i class="fas fa-chevron-left"></i> Précédent
+          </button>
+          <span class="page-info" id="pageInfo">Page 1 / 1</span>
+          <button class="btn btn-outline btn-sm" id="nextBtn" disabled>
+            Suivant <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         TAB 2 — Compte (existing audit log — preserved exactly)
+    ══════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-compte">
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Action</th><th>Date</th><th>Détails</th></tr>
+            </thead>
+            <tbody id="historyBody">
+              <tr class="state-row">
+                <td colspan="3">
+                  <i class="fas fa-spinner fa-spin"></i> Chargement…
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/theme.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/utils.js"></script>
+  <script>
+    requireAuth("/user/login.html");
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      clearToken();
+      window.location.href = "/user/login.html";
+    });
+
+    // ── Tab switching ──────────────────────────────────────
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    // ══════════════════════════════════════════════════════
+    // TAB 2 — Audit log (existing code, preserved exactly)
+    // ══════════════════════════════════════════════════════
+    const ACTION_LABELS = {
+      creation: "Création du compte", activation: "Activation du compte",
+      password_reset: "Réinitialisation mot de passe", statut_actif: "Compte activé",
+      statut_desactive: "Compte désactivé", statut_banni: "Compte banni",
+      promotion_admin: "Promotion administrateur", suppression: "Suppression du compte",
+      notification: "Notification reçue",
+    };
+
+    async function loadHistory() {
+      const res = await UserAPI.history();
+      const tbody = document.getElementById("historyBody");
+      if (!res || !res.ok) {
+        tbody.innerHTML = `<tr><td colspan="3" style="color:var(--danger)">Erreur de chargement</td></tr>`;
+        return;
+      }
+      const logs = res.data.history;
+      if (!logs.length) {
+        tbody.innerHTML = `<tr class="state-row"><td colspan="3">Aucune action enregistrée</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = logs.map(l => `
+        <tr>
+          <td>${ACTION_LABELS[l.action] || l.action}</td>
+          <td>${formatDate(l.created_at)}</td>
+          <td>${l.details || "—"}</td>
+        </tr>
+      `).join("");
+    }
+
+    // ══════════════════════════════════════════════════════
+    // TAB 1 — Calculation history
+    // ══════════════════════════════════════════════════════
+    let currentPage = 1;
+    let totalPages  = 1;
+    let currentFilterType = "";
+
+    // ── Helpers ───────────────────────────────────────────
+    function calcTypeBadge(type, flowType) {
+      const isCross = flowType === 'cross-current';
+      const isCounter = flowType === 'counter-current' || !flowType; // Par défaut contre-courant
+      
+      const map = {
+        absorption:   { cls: "badge-absorption",  label: "Absorption" },
+        desorption:   { cls: "badge-desorption",  label: "Désorption" },
+        mccabe_thiele:{ cls: "badge-mccabe",       label: "McCabe-Thiele" },
+      };
+      const t = map[type] || { cls: "", label: type };
+      
+      let flowBadge = '';
+      if (isCross) {
+        flowBadge = ` <span class="badge badge-cross" style="font-size:.7rem;padding:.15rem .5rem;">⇄ Courant croisé</span>`;
+      } else if (isCounter) {
+        flowBadge = ` <span class="badge badge-counter" style="font-size:.7rem;padding:.15rem .5rem;">↕ Contre-courant</span>`;
+      }
+      
+      return `<span class="badge ${t.cls}">${t.label}</span>${flowBadge}`;
+    }
+
+    function formatParams(entry) {
+      const p = entry.input_parameters || {};
+      const type = entry.calculation_type;
+      if (type === "absorption") {
+        return `<div class="params-cell">
+          <strong>G'</strong> ${p.G_prime ?? "—"} &nbsp;
+          <strong>L'</strong> ${p.L_prime ?? "—"} &nbsp;
+          <strong>m</strong> ${p.m ?? "—"}<br>
+          <strong>y₀</strong> ${p.y0 ?? "—"} &nbsp;
+          <strong>x₀</strong> ${p.x0 ?? "—"} &nbsp;
+          <strong>y*</strong> ${p.y_objectif ?? "—"}
+        </div>`;
+      }
+      if (type === "desorption") {
+        return `<div class="params-cell">
+          <strong>G</strong> ${p.G ?? "—"} &nbsp;
+          <strong>L</strong> ${p.L ?? "—"} &nbsp;
+          <strong>m</strong> ${p.m ?? "—"}<br>
+          <strong>x₀</strong> ${p.x0 ?? "—"} &nbsp;
+          <strong>y₀</strong> ${p.y0 ?? "—"} &nbsp;
+          <strong>x*</strong> ${p.x_obj ?? "—"}
+        </div>`;
+      }
+      // Generic fallback
+      const keys = Object.keys(p).slice(0, 4);
+      if (!keys.length) return '<div class="params-cell">—</div>';
+      return `<div class="params-cell">${keys.map(k => `<strong>${k}</strong> ${p[k]}`).join(" &nbsp; ")}</div>`;
+    }
+
+    function formatResults(entry) {
+      const r = entry.result_summary || {};
+      const type = entry.calculation_type;
+      if (type === "absorption") {
+        return `<div class="params-cell">
+          <strong>Étages</strong> ${r.nb_etages ?? "—"}<br>
+          <strong>Taux</strong> ${r.taux != null ? r.taux + " %" : "—"} &nbsp;
+          <strong>A</strong> ${r.facteur_A ?? "—"}
+        </div>`;
+      }
+      if (type === "desorption") {
+        return `<div class="params-cell">
+          <strong>Étages</strong> ${r.nb_etages ?? "—"}<br>
+          <strong>Taux</strong> ${r.taux != null ? r.taux + " %" : "—"} &nbsp;
+          <strong>S</strong> ${r.facteur_S ?? "—"}
+        </div>`;
+      }
+      const keys = Object.keys(r).slice(0, 3);
+      if (!keys.length) return '<div class="params-cell">—</div>';
+      return `<div class="params-cell">${keys.map(k => `<strong>${k}</strong> ${r[k]}`).join(" &nbsp; ")}</div>`;
+    }
+
+    function reloadUrl(entry) {
+      const isCross = entry.input_parameters?.flow_type === 'cross-current';
+      if (entry.calculation_type === "desorption") {
+        return `/user/desorption.html?history_id=${entry.id}${isCross ? '&mode=cross-current' : ''}`;
+      }
+      return `/user/absorption.html?history_id=${entry.id}${isCross ? '&mode=cross-current' : ''}`;
+    }
+
+    // ── Render table ──────────────────────────────────────
+    function renderCalcTable(entries) {
+      const tbody = document.getElementById("calcBody");
+      if (!entries || !entries.length) {
+        tbody.innerHTML = `<tr class="state-row"><td colspan="5">Aucun calcul enregistré pour ce filtre.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = entries.map(entry => {
+        const nameCell = entry.custom_name
+          ? `<strong>${escapeHtml(entry.custom_name)}</strong><br><small style="color:var(--muted)">${calcTypeBadge(entry.calculation_type, entry.input_parameters?.flow_type)}</small>`
+          : calcTypeBadge(entry.calculation_type, entry.input_parameters?.flow_type);
+
+        return `<tr id="row-${entry.id}">
+          <td id="name-cell-${entry.id}">${nameCell}</td>
+          <td>${formatParams(entry)}</td>
+          <td>${formatResults(entry)}</td>
+          <td style="white-space:nowrap">${formatDate(entry.created_at)}</td>
+          <td>
+            <div class="action-group">
+              <a href="${reloadUrl(entry)}" class="btn btn-outline btn-sm" title="Recharger les paramètres">
+                <i class="fas fa-redo"></i> Recharger
+              </a>
+              <button class="btn btn-danger btn-sm" onclick="deleteEntry('${entry.id}')" title="Supprimer">
+                <i class="fas fa-trash"></i> Supprimer
+              </button>
+            </div>
+          </td>
+        </tr>`;
+      }).join("");
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    // ── Load calculation history ──────────────────────────
+    async function loadCalcHistory(page, filterType) {
+      const tbody = document.getElementById("calcBody");
+      tbody.innerHTML = `<tr class="state-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Chargement…</td></tr>`;
+      document.getElementById("calcPagination").style.display = "none";
+
+      // Déterminer le type de calcul pour l'API (absorption ou desorption seulement)
+      let apiCalcType = "";
+      if (filterType && filterType !== "") {
+        if (filterType.startsWith("absorption")) {
+          apiCalcType = "absorption";
+        } else if (filterType.startsWith("desorption")) {
+          apiCalcType = "desorption";
+        }
+      }
+
+      let url = `/api/history?page=${page}&per_page=50`; // Augmenter per_page pour le filtrage côté client
+      if (apiCalcType) url += `&calc_type=${encodeURIComponent(apiCalcType)}`;
+
+      const token = getToken();
+      let res;
+      try {
+        const response = await fetch(`http://127.0.0.1:5000${url}`, {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (response.status === 401) {
+          clearToken();
+          window.location.href = "/user/login.html";
+          return;
+        }
+        res = await response.json();
+      } catch (e) {
+        tbody.innerHTML = `<tr class="state-row"><td colspan="5" style="color:var(--danger)"><i class="fas fa-exclamation-circle"></i> Erreur réseau lors du chargement.</td></tr>`;
+        return;
+      }
+
+      if (!res || !res.success) {
+        tbody.innerHTML = `<tr class="state-row"><td colspan="5" style="color:var(--danger)"><i class="fas fa-exclamation-circle"></i> ${res?.message || "Erreur de chargement."}</td></tr>`;
+        return;
+      }
+
+      let entries = res.entries || [];
+      
+      // Filtrage côté client par type de flux
+      if (filterType && filterType !== "") {
+        entries = entries.filter(entry => {
+          const calcType = entry.calculation_type;
+          const flowType = entry.input_parameters?.flow_type || 'counter-current';
+          
+          switch (filterType) {
+            case "absorption":
+              return calcType === "absorption";
+            case "absorption-counter":
+              return calcType === "absorption" && flowType === 'counter-current';
+            case "absorption-cross":
+              return calcType === "absorption" && flowType === 'cross-current';
+            case "desorption":
+              return calcType === "desorption";
+            case "desorption-counter":
+              return calcType === "desorption" && flowType === 'counter-current';
+            case "desorption-cross":
+              return calcType === "desorption" && flowType === 'cross-current';
+            default:
+              return true;
+          }
+        });
+      }
+
+      const pagination = res.pagination || {};
+      totalPages = Math.ceil(entries.length / 20) || 1; // Pagination côté client
+      currentPage = Math.min(page, totalPages);
+
+      // Paginer côté client
+      const startIndex = (currentPage - 1) * 20;
+      const endIndex = startIndex + 20;
+      const paginatedEntries = entries.slice(startIndex, endIndex);
+
+      renderCalcTable(paginatedEntries);
+      updatePagination();
+    }
+
+    // ── Pagination controls ───────────────────────────────
+    function updatePagination() {
+      const pag = document.getElementById("calcPagination");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      const pageInfo = document.getElementById("pageInfo");
+
+      pag.style.display = totalPages > 1 ? "flex" : "none";
+      pageInfo.textContent = `Page ${currentPage} / ${totalPages}`;
+      prevBtn.disabled = currentPage <= 1;
+      nextBtn.disabled = currentPage >= totalPages;
+    }
+
+    document.getElementById("prevBtn").addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage--;
+        loadCalcHistory(currentPage, currentFilterType);
+      }
+    });
+
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      if (currentPage < totalPages) {
+        currentPage++;
+        loadCalcHistory(currentPage, currentFilterType);
+      }
+    });
+
+    document.getElementById("typeFilter").addEventListener("change", (e) => {
+      currentFilterType = e.target.value;
+      currentPage = 1;
+      loadCalcHistory(currentPage, currentFilterType);
+    });
+
+    // ── Delete single entry ───────────────────────────────
+    async function deleteEntry(id) {
+      if (!confirm("Supprimer ce calcul de l'historique ? Cette action est irréversible.")) return;
+
+      const token = getToken();
+      let res;
+      try {
+        const response = await fetch(`http://127.0.0.1:5000/api/history/${id}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (response.status === 401) {
+          clearToken();
+          window.location.href = "/user/login.html";
+          return;
+        }
+        if (response.status === 403) {
+          showAlert(document.getElementById("alert"), "Vous n'êtes pas autorisé à supprimer ce calcul.", "error");
+          return;
+        }
+        res = await response.json();
+      } catch (e) {
+        showAlert(document.getElementById("alert"), "Erreur réseau lors de la suppression.", "error");
+        return;
+      }
+
+      if (!res || !res.success) {
+        showAlert(document.getElementById("alert"), res?.message || "Erreur lors de la suppression.", "error");
+        return;
+      }
+
+      // Remove the row without page reload
+      const row = document.getElementById(`row-${id}`);
+      if (row) row.remove();
+
+      // If table is now empty, show empty state
+      const tbody = document.getElementById("calcBody");
+      if (!tbody.querySelector("tr:not(.state-row)")) {
+        tbody.innerHTML = `<tr class="state-row"><td colspan="5">Aucun calcul enregistré pour ce filtre.</td></tr>`;
+        document.getElementById("calcPagination").style.display = "none";
+      }
+
+      showAlert(document.getElementById("alert"), "Calcul supprimé.", "success");
+      setTimeout(() => hideAlert(document.getElementById("alert")), 3000);
+    }
+
+    // ── Delete all ────────────────────────────────────────
+    document.getElementById("deleteAllBtn").addEventListener("click", async () => {
+      if (!confirm("⚠️ Supprimer TOUT votre historique de calculs ? Cette action est irréversible et supprimera toutes vos entrées.")) return;
+
+      const token = getToken();
+      let res;
+      try {
+        const response = await fetch("http://127.0.0.1:5000/api/history", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (response.status === 401) {
+          clearToken();
+          window.location.href = "/user/login.html";
+          return;
+        }
+        res = await response.json();
+      } catch (e) {
+        showAlert(document.getElementById("alert"), "Erreur réseau lors de la suppression.", "error");
+        return;
+      }
+
+      if (!res || !res.success) {
+        showAlert(document.getElementById("alert"), res?.message || "Erreur lors de la suppression.", "error");
+        return;
+      }
+
+      const count = res.deleted || 0;
+      document.getElementById("calcBody").innerHTML = `<tr class="state-row"><td colspan="5">Aucun calcul enregistré pour ce filtre.</td></tr>`;
+      document.getElementById("calcPagination").style.display = "none";
+      totalPages = 1;
+      currentPage = 1;
+
+      showAlert(document.getElementById("alert"), `${count} calcul${count > 1 ? "s" : ""} supprimé${count > 1 ? "s" : ""} avec succès.`, "success");
+      setTimeout(() => hideAlert(document.getElementById("alert")), 5000);
+    });
+
+    // ── Init ──────────────────────────────────────────────
+    loadCalcHistory(1, "");
+    loadHistory();
+  </script>
+</body>
+</html>

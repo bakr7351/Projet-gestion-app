@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcul de Désorption - Espace Utilisateur</title>
+    <link rel="stylesheet" href="/css/user.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist@2.27.0/plotly.min.js"></script>
+
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-flask"></i>
+                <span>Calculs Chimiques</span>
+            </div>
+            <div class="nav-menu">
+                <a href="/user/dashboard.html" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    Tableau de bord
+                </a>
+                <a href="/user/absorption.html" class="nav-link">
+                    <i class="fas fa-arrow-down"></i>
+                    Absorption
+                </a>
+                <a href="/user/desorption.html" class="nav-link active">
+                    <i class="fas fa-arrow-up"></i>
+                    Désorption
+                </a>
+                <a href="/user/profile.html" class="nav-link">
+                    <i class="fas fa-user"></i>
+                    Profil
+                </a>
+                <button id="theme-toggle" class="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button id="flow-toggle-btn" class="nav-link" onclick="toggleFlowType()" title="Changer le mode de contact">
+                    <i class="fas fa-exchange-alt"></i> <span id="flow-label">Contre-courant</span>
+                </button>
+                <button id="logout-btn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Déconnexion
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 id="page-title"><i class="fas fa-arrow-up"></i> Calcul de Désorption</h1>
+                <p id="page-subtitle">Simulation du procédé de désorption à contre-courant</p>
+                <!-- Toggle mode de contact -->
+                <div id="flow-mode-toggle" style="display:inline-flex;align-items:center;gap:0.75rem;margin-top:0.75rem;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:2rem;padding:0.35rem 1rem;">
+                    <span style="font-size:0.85rem;opacity:0.7;">Mode :</span>
+                    <button id="btn-counter" style="border:none;border-radius:1.5rem;padding:0.3rem 1rem;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all .2s;background:#6366f1;color:white;">
+                        <i class="fas fa-arrows-alt-v"></i> Contre-courant
+                    </button>
+                    <button id="btn-cross" style="border:none;border-radius:1.5rem;padding:0.3rem 1rem;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all .2s;background:transparent;color:rgba(255,255,255,0.5);">
+                        <i class="fas fa-random"></i> Courant croisé
+                    </button>
+                </div>
+            </div>
+
+            <!-- Formulaire -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-calculator"></i> Paramètres de simulation</h2>
+                </div>
+                
+                <form id="desorption-form" class="calculation-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-wind"></i>
+                                Débit gaz G (mol/h)
+                            </label>
+                            <input type="number" name="G" value="120" step="0.01" min="0.01" required>
+                            <small>Débit molaire du gaz de stripping</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-tint"></i>
+                                Débit liquide L (mol/h)
+                            </label>
+                            <input type="number" name="L" value="60" step="0.01" min="0.01" required>
+                            <small>Débit molaire du liquide</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-balance-scale"></i>
+                                Constante d'équilibre m
+                            </label>
+                            <input type="number" name="m" value="0.6" step="0.0001" min="0.0001" required>
+                            <small>Constante de Henry</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-arrow-right"></i>
+                                Fraction molaire entrée x₀
+                            </label>
+                            <input type="number" name="x0" value="0.08" step="0.0001" min="0" max="1" required>
+                            <small>Fraction molaire du soluté dans le liquide</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-arrow-left"></i>
+                                Fraction molaire gaz y₀
+                            </label>
+                            <input type="number" name="y0" value="0.0" step="0.0001" min="0" max="1">
+                            <small>Fraction molaire du soluté dans le gaz</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-bullseye"></i>
+                                Fraction objectif x_obj
+                            </label>
+                            <input type="number" name="x_obj" value="0.008" step="0.0001" min="0" max="1" required>
+                            <small>Fraction molaire objectif en sortie</small>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="submit-btn" class="btn btn-primary">
+                            <i class="fas fa-play"></i>
+                            Lancer la simulation
+                        </button>
+                        <button type="reset" class="btn btn-secondary">
+                            <i class="fas fa-undo"></i>
+                            Réinitialiser
+                        </button>
+                        <button type="button" id="example-btn" class="btn btn-outline">
+                            <i class="fas fa-lightbulb"></i>
+                            Exemple
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Résultats -->
+            <div id="results-section" style="display: none;">
+                <!-- Stats -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-chart-bar"></i> Résultats de la simulation</h2>
+                        <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+                            <button class="btn btn-outline" onclick="exportResults()">
+                                <i class="fas fa-download"></i>
+                                Exporter TXT
+                            </button>
+                            <button class="btn btn-outline" id="exportExcelBtn" onclick="exportExcel()" style="display:none;border-color:#16a34a;color:#16a34a;">
+                                <i class="fas fa-file-excel"></i>
+                                Exporter Excel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="stats-grid" class="performance-grid"></div>
+                </div>
+
+                <!-- Graphiques -->
+                <div class="charts-section">
+                    <!-- McCabe-Thiele -->
+                    <div class="chart-container-large">
+                        <h3><i class="fas fa-chart-line"></i> Diagramme McCabe-Thiele</h3>
+                        <div id="mccabe-chart"></div>
+                    </div>
+
+                    <!-- Deux graphiques côte à côte -->
+                    <div class="charts-row">
+                        <div class="chart-container-large">
+                            <h3><i class="fas fa-chart-area"></i> Évolution des concentrations</h3>
+                            <div id="concentration-chart"></div>
+                        </div>
+
+                        <div class="chart-container-large">
+                            <h3><i class="fas fa-cube"></i> Schéma de la colonne</h3>
+                            <div id="column-chart"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tableau -->
+                <div class="card">
+                    <h3><i class="fas fa-table"></i> Détails par étage</h3>
+                    <div class="table-wrapper">
+                        <table id="results-table" class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Étage</th>
+                                    <th>X entrée</th>
+                                    <th>Y entrée</th>
+                                    <th>X sortie</th>
+                                    <th>Y sortie</th>
+                                    <th>x sortie</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Calcul en cours...</p>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/theme.js"></script>
+    <script src="/js/notifications.js"></script>
+    <script>
+        let currentResults = null;
+        let currentFlowType = 'counter-current'; // Default flow type
+
+        function setFlowType(type) {
+            console.log('🎯 setFlowType appelé avec:', type);
+            currentFlowType = type;
+            updateFlowTypeUI();
+            console.log('✅ Type de flux mis à jour:', currentFlowType);
+        }
+
+        function toggleFlowType() {
+            currentFlowType = currentFlowType === 'counter-current' ? 'cross-current' : 'counter-current';
+            updateFlowTypeUI();
+        }
+
+        function updateFlowTypeUI() {
+            console.log('🎨 Mise à jour de l\'UI pour:', currentFlowType);
+            
+            const btnCounter = document.getElementById('btn-counter');
+            const btnCross = document.getElementById('btn-cross');
+            const subtitle = document.getElementById('page-subtitle');
+            const navBtn = document.getElementById('flow-toggle-btn');
+            const navLabel = document.getElementById('flow-label');
+
+            if (!btnCounter || !btnCross) {
+                console.error('❌ Boutons de flux non trouvés');
+                return;
+            }
+
+            if (currentFlowType === 'cross-current') {
+                btnCounter.style.background = 'transparent';
+                btnCounter.style.color = 'rgba(255,255,255,0.5)';
+                btnCross.style.background = '#ff6b6b';
+                btnCross.style.color = 'white';
+                if (subtitle) subtitle.textContent = "Simulation du procédé de désorption à courant croisé";
+                if (navBtn) { navBtn.style.background = '#ff6b6b'; navBtn.style.borderColor = '#ff6b6b'; navBtn.style.color = 'white'; }
+                if (navLabel) navLabel.textContent = 'Courant croisé';
+                console.log('✅ UI mise à jour pour courant croisé');
+            } else {
+                btnCross.style.background = 'transparent';
+                btnCross.style.color = 'rgba(255,255,255,0.5)';
+                btnCounter.style.background = '#6366f1';
+                btnCounter.style.color = 'white';
+                if (subtitle) subtitle.textContent = "Simulation du procédé de désorption à contre-courant";
+                if (navBtn) { navBtn.style.background = '#6366f1'; navBtn.style.borderColor = '#6366f1'; navBtn.style.color = 'white'; }
+                if (navLabel) navLabel.textContent = 'Contre-courant';
+                console.log('✅ UI mise à jour pour contre-courant');
+            }
+            
+            // Réinitialiser les résultats si on change de mode
+            const resultsSection = document.getElementById('results-section');
+            if (resultsSection) {
+                resultsSection.style.display = 'none';
+            }
+            currentResults = null;
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            initializeForm();
+            loadFromHistory();
+            
+            // Vérifier que le bouton Excel est correctement configuré
+            const exportBtn = document.getElementById('exportExcelBtn');
+            if (exportBtn) {
+                console.log('✅ Bouton Excel trouvé:', exportBtn);
+                console.log('📋 Onclick:', exportBtn.onclick);
+                console.log('📋 getAttribute onclick:', exportBtn.getAttribute('onclick'));
+                
+                // S'assurer que la fonction est bien liée
+                if (!exportBtn.onclick && exportBtn.getAttribute('onclick') === 'exportExcel()') {
+                    exportBtn.onclick = window.exportExcel;
+                    console.log('🔧 Fonction exportExcel liée manuellement');
+                }
+            } else {
+                console.error('❌ Bouton exportExcelBtn non trouvé');
+            }
+            
+            // Lire le mode depuis l'URL si présent
+            const urlParams = new URLSearchParams(window.location.search);
+            const mode = urlParams.get('mode');
+            if (mode === 'cross-current') {
+                setFlowType('cross-current');
+            } else {
+                updateFlowTypeUI(); // initialiser le toggle
+            }
+        });
+
+        function checkAuth() {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = '/user/login.html';
+                return;
+            }
+        }
+
+        function initializeForm() {
+            console.log('🚀 Initialisation du formulaire de désorption...');
+            
+            const form = document.getElementById('desorption-form');
+            if (form) {
+                // Empêcher complètement le submit normal du formulaire
+                form.addEventListener('submit', function(e) {
+                    console.log('🛑 Submit intercepté - preventDefault appelé');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSubmit(e);
+                    return false;
+                });
+                
+                console.log('✅ Event listener attaché au formulaire de désorption');
+            } else {
+                console.error('❌ Formulaire desorption-form non trouvé');
+            }
+            
+            // Attacher l'événement au bouton submit
+            const submitBtn = document.getElementById('submit-btn');
+            if (submitBtn) {
+                submitBtn.addEventListener('click', function(e) {
+                    console.log('🔘 Bouton "Lancer la simulation" cliqué');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Créer un événement de formulaire artificiel
+                    const formEvent = new Event('submit', { bubbles: true, cancelable: true });
+                    Object.defineProperty(formEvent, 'target', { value: form });
+                    handleSubmit(formEvent);
+                });
+                console.log('✅ Event listener attaché au bouton "Lancer la simulation"');
+            } else {
+                console.error('❌ Bouton submit-btn non trouvé');
+            }
+            
+            // Initialiser les boutons de type de flux
+            const btnCounter = document.getElementById('btn-counter');
+            const btnCross = document.getElementById('btn-cross');
+            
+            if (btnCounter) {
+                btnCounter.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('🔄 Bouton contre-courant cliqué');
+                    setFlowType('counter-current');
+                });
+                console.log('✅ Event listener attaché au bouton contre-courant');
+            }
+            
+            if (btnCross) {
+                btnCross.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('🔄 Bouton courant croisé cliqué');
+                    setFlowType('cross-current');
+                });
+                console.log('✅ Event listener attaché au bouton courant croisé');
+            }
+            
+            // Initialiser l'UI
+            updateFlowTypeUI();
+            
+            // Bouton exemple
+            const exampleBtn = document.getElementById('example-btn');
+            if (exampleBtn) {
+                exampleBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('💡 Bouton exemple cliqué');
+                    loadExample();
+                });
+                console.log('✅ Event listener attaché au bouton exemple');
+            }
+            
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', logout);
+            }
+            
+            console.log('✅ Initialisation terminée');
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            window.location.href = '/user/login.html';
+        }
+
+        async function handleSubmit(e) {
+            console.log('🚀 handleSubmit appelé');
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            console.log('Form data:', data);
+            console.log('Current flow type:', currentFlowType);
+            
+            if (parseFloat(data.x_obj) >= parseFloat(data.x0)) {
+                notifications.error('La fraction objectif doit être inférieure à la fraction d\'entrée');
+                return;
+            }
+
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'flex';
+            }
+            
+            try {
+                // Déterminer l'endpoint en fonction du type de flux sélectionné via le bouton
+                const endpoint = currentFlowType === 'cross-current'
+                    ? '/calculations/desorption-cross-current'
+                    : '/calculations/desorption';
+                
+                console.log('Using endpoint:', endpoint);
+                
+                // Utiliser fetch directement avec les headers appropriés
+                const token = localStorage.getItem('access_token');
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                } else {
+                    // Si pas de token, ajouter le header pour l'accès anonyme
+                    headers['X-Anonymous-Access'] = 'true';
+                }
+                
+                console.log('Request headers:', headers);
+                
+                const response = await fetch(`http://127.0.0.1:5000/api${endpoint}`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                console.log('API response:', result);
+                
+                if (result.success) {
+                    currentResults = result.data;
+                    displayResults(result.data.calculation_results);
+                    notifications.success('Simulation terminée avec succès');
+                } else {
+                    console.error('API error:', result);
+                    notifications.error(result.message || 'Erreur lors du calcul');
+                }
+            } catch (error) {
+                console.error('Request error:', error);
+                notifications.error('Erreur de connexion: ' + error.message);
+            } finally {
+                if (loadingOverlay) {
+                    loadingOverlay.style.display = 'none';
+                }
+            }
+        }
+
+        function displayResults(results) {
+            document.getElementById('results-section').style.display = 'block';
+            document.getElementById('exportExcelBtn').style.display = 'inline-flex';
+            
+            // Stats
+            const perf = results.performance || {};
+            document.getElementById('stats-grid').innerHTML = `
+                <div class="performance-card">
+                    <div class="performance-icon"><i class="fas fa-layer-group"></i></div>
+                    <div class="performance-content">
+                        <h3>${results.nb_etages}</h3>
+                        <p>Étages nécessaires</p>
+                    </div>
+                </div>
+                <div class="performance-card">
+                    <div class="performance-icon"><i class="fas fa-percentage"></i></div>
+                    <div class="performance-content">
+                        <h3>${results.taux.toFixed(2)}%</h3>
+                        <p>Taux de désorption</p>
+                    </div>
+                </div>
+                <div class="performance-card">
+                    <div class="performance-icon"><i class="fas fa-weight"></i></div>
+                    <div class="performance-content">
+                        <h3>${results.quantite.toFixed(2)}</h3>
+                        <p>Quantité désorbée (mol/h)</p>
+                    </div>
+                </div>
+                <div class="performance-card">
+                    <div class="performance-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="performance-content">
+                        <h3>${results.facteur_S.toFixed(3)}</h3>
+                        <p>Facteur S</p>
+                    </div>
+                </div>
+                <div class="performance-card">
+                    <div class="performance-icon"><i class="fas fa-clock"></i></div>
+                    <div class="performance-content">
+                        <h3>${perf.execution_time_ms || 0}</h3>
+                        <p>Temps (ms)</p>
+                    </div>
+                </div>
+                <div class="performance-card">
+                    <div class="performance-icon"><i class="fas fa-memory"></i></div>
+                    <div class="performance-content">
+                        <h3>${perf.memory_usage_mb || 0}</h3>
+                        <p>Mémoire (MB)</p>
+                    </div>
+                </div>
+            `;
+            
+            // Graphiques - attendre que Plotly soit chargé
+            console.log('🎨 Préparation des graphiques...');
+            
+            const renderGraphsWhenReady = () => {
+                if (typeof Plotly === 'undefined') {
+                    console.log('⏳ Attente du chargement de Plotly...');
+                    setTimeout(renderGraphsWhenReady, 100);
+                    return;
+                }
+                
+                console.log('📊 Plotly chargé, rendu des graphiques...');
+                
+                if (currentResults.matplotlib_mccabe_graph) {
+                    console.log('Rendu McCabe-Thiele...');
+                    renderPlotly('mccabe-chart', currentResults.matplotlib_mccabe_graph);
+                }
+                if (currentResults.concentration_evolution_graph) {
+                    console.log('Rendu concentration...');
+                    renderPlotly('concentration-chart', currentResults.concentration_evolution_graph);
+                }
+                if (currentResults['3d_profile_graph']) {
+                    console.log('Rendu 3D...');
+                    renderPlotly('column-chart', currentResults['3d_profile_graph']);
+                }
+            };
+            
+            renderGraphsWhenReady();
+            
+            // Tableau
+            const tbody = document.querySelector('#results-table tbody');
+            tbody.innerHTML = results.resultats.map(r => `
+                <tr>
+                    <td>${r.etage}</td>
+                    <td>${r.X_entree.toFixed(4)}</td>
+                    <td>${r.Y_entree.toFixed(4)}</td>
+                    <td>${r.X_sortie.toFixed(4)}</td>
+                    <td>${r.Y_sortie.toFixed(4)}</td>
+                    <td>${r.x_sortie.toFixed(4)}</td>
+                </tr>
+            `).join('');
+            
+            document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderPlotly(containerId, data) {
+            // Vérifier que Plotly est chargé
+            if (typeof Plotly === 'undefined') {
+                console.error('Plotly is not loaded, waiting...');
+                // Attendre que Plotly soit chargé
+                setTimeout(() => renderPlotly(containerId, data), 100);
+                return;
+            }
+
+            try {
+                const plotData = typeof data === 'string' ? JSON.parse(data) : data;
+                
+                if (!plotData || !plotData.data) {
+                    console.error('Invalid plot data for', containerId);
+                    return;
+                }
+                
+                applyThemeToPlotly(plotData);
+                
+                plotData.layout.autosize = true;
+                plotData.layout.height = null;
+                
+                const config = {
+                    responsive: true,
+                    displayModeBar: true,
+                    displaylogo: false
+                };
+                
+                Plotly.newPlot(containerId, plotData.data, plotData.layout, config);
+                console.log('✅ Graphique rendu:', containerId);
+                
+            } catch (error) {
+                console.error('Erreur lors du rendu du graphique:', error);
+            }
+        }
+
+        function applyThemeToPlotly(plotData) {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            
+            if (isDark) {
+                plotData.layout.paper_bgcolor = '#1e293b';
+                plotData.layout.plot_bgcolor = '#0f172a';
+                plotData.layout.font = { color: '#e2e8f0' };
+                
+                if (plotData.layout.xaxis) {
+                    plotData.layout.xaxis.gridcolor = '#334155';
+                    plotData.layout.xaxis.color = '#e2e8f0';
+                }
+                if (plotData.layout.yaxis) {
+                    plotData.layout.yaxis.gridcolor = '#334155';
+                    plotData.layout.yaxis.color = '#e2e8f0';
+                }
+                
+                if (plotData.layout.scene) {
+                    plotData.layout.scene.bgcolor = '#0f172a';
+                    if (plotData.layout.scene.xaxis) {
+                        plotData.layout.scene.xaxis.gridcolor = '#334155';
+                        plotData.layout.scene.xaxis.color = '#e2e8f0';
+                    }
+                    if (plotData.layout.scene.yaxis) {
+                        plotData.layout.scene.yaxis.gridcolor = '#334155';
+                        plotData.layout.scene.yaxis.color = '#e2e8f0';
+                    }
+                    if (plotData.layout.scene.zaxis) {
+                        plotData.layout.scene.zaxis.gridcolor = '#334155';
+                        plotData.layout.scene.zaxis.color = '#e2e8f0';
+                    }
+                }
+            } else {
+                plotData.layout.paper_bgcolor = '#ffffff';
+                plotData.layout.plot_bgcolor = '#f8fafc';
+                plotData.layout.font = { color: '#1e293b' };
+                
+                if (plotData.layout.xaxis) {
+                    plotData.layout.xaxis.gridcolor = '#e2e8f0';
+                    plotData.layout.xaxis.color = '#1e293b';
+                }
+                if (plotData.layout.yaxis) {
+                    plotData.layout.yaxis.gridcolor = '#e2e8f0';
+                    plotData.layout.yaxis.color = '#1e293b';
+                }
+                
+                if (plotData.layout.scene) {
+                    plotData.layout.scene.bgcolor = '#f8fafc';
+                    if (plotData.layout.scene.xaxis) {
+                        plotData.layout.scene.xaxis.gridcolor = '#e2e8f0';
+                        plotData.layout.scene.xaxis.color = '#1e293b';
+                    }
+                    if (plotData.layout.scene.yaxis) {
+                        plotData.layout.scene.yaxis.gridcolor = '#e2e8f0';
+                        plotData.layout.scene.yaxis.color = '#1e293b';
+                    }
+                    if (plotData.layout.scene.zaxis) {
+                        plotData.layout.scene.zaxis.gridcolor = '#e2e8f0';
+                        plotData.layout.scene.zaxis.color = '#1e293b';
+                    }
+                }
+            }
+        }
+
+        let exportInProgress = false;
+
+        function updateAllChartsTheme() {
+            if (currentResults) {
+                if (currentResults.matplotlib_mccabe_graph) {
+                    renderPlotly('mccabe-chart', currentResults.matplotlib_mccabe_graph);
+                }
+                if (currentResults.concentration_evolution_graph) {
+                    renderPlotly('concentration-chart', currentResults.concentration_evolution_graph);
+                }
+                if (currentResults['3d_profile_graph']) {
+                    renderPlotly('column-chart', currentResults['3d_profile_graph']);
+                }
+            }
+        }
+
+        const themeObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                    updateAllChartsTheme();
+                }
+            });
+        });
+
+        themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
+        });
+
+        function loadExample() {
+            console.log('💡 Chargement exemple');
+            document.querySelector('[name="G"]').value = '120';
+            document.querySelector('[name="L"]').value = '60';
+            document.querySelector('[name="m"]').value = '0.6';
+            document.querySelector('[name="x0"]').value = '0.08';
+            document.querySelector('[name="y0"]').value = '0.0';
+            document.querySelector('[name="x_obj"]').value = '0.008';
+        }
+
+        function exportResults() {
+            if (!currentResults) {
+                notifications.warning('Aucun résultat à exporter');
+                return;
+            }
+            
+            const rapport = generateReport(currentResults.calculation_results);
+            const blob = new Blob([rapport], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rapport_desorption_${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            notifications.success('Rapport exporté avec succès');
+        }
+
+        async function loadFromHistory() {
+            const params = new URLSearchParams(window.location.search);
+            const historyId = params.get('history_id');
+            if (!historyId) return;
+
+            const token = localStorage.getItem('access_token');
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/api/history/${historyId}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (!response.ok) {
+                    notifications.warning('Impossible de charger les paramètres depuis l\'historique.');
+                    return;
+                }
+                const res = await response.json();
+                if (!res.success || !res.entry) {
+                    notifications.warning('Paramètres introuvables dans l\'historique.');
+                    return;
+                }
+                const p = res.entry.input_parameters || {};
+                if (p.G !== undefined) document.querySelector('[name="G"]').value = p.G;
+                if (p.L !== undefined) document.querySelector('[name="L"]').value = p.L;
+                if (p.m !== undefined) document.querySelector('[name="m"]').value = p.m;
+                if (p.x0 !== undefined) document.querySelector('[name="x0"]').value = p.x0;
+                if (p.y0 !== undefined) document.querySelector('[name="y0"]').value = p.y0;
+                if (p.x_obj !== undefined) document.querySelector('[name="x_obj"]').value = p.x_obj;
+                notifications.success('Paramètres rechargés depuis l\'historique.');
+            } catch (e) {
+                notifications.warning('Erreur réseau lors du chargement depuis l\'historique.');
+            }
+        }
+
+        // Rendre la fonction exportExcel globale
+        window.exportExcel = async function() {
+            if (!currentResults) {
+                notifications.warning('Aucun résultat à exporter');
+                return;
+            }
+
+            // Empêcher les exports multiples simultanés
+            if (exportInProgress) {
+                console.log('⚠️ Export déjà en cours, ignoré');
+                notifications.warning('Export déjà en cours, veuillez patienter...');
+                return;
+            }
+
+            exportInProgress = true;
+            const btn = document.getElementById('exportExcelBtn');
+            const originalText = btn.innerHTML;
+            
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération…';
+
+                console.log('🚀 DÉBUT DE L\'EXPORT EXCEL (DÉSORPTION)');
+                console.log('📊 Résultats actuels:', currentResults);
+
+                // Préparer les données à envoyer (sans diagrammes)
+                const exportData = { 
+                    results: currentResults.calculation_results, 
+                    graphs: {} // Pas de diagrammes dans l'export Excel
+                };
+                
+                console.log('📦 Données d\'export préparées');
+
+                console.log('📤 Envoi de la requête d\'export...');
+                const response = await fetch('http://127.0.0.1:5000/api/calculations/export/excel/desorption', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(exportData),
+                });
+
+                console.log('📥 Réponse reçue:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    console.error('❌ Erreur serveur:', err);
+                    notifications.error(err.message || 'Erreur lors de la génération Excel');
+                    return;
+                }
+
+                console.log('💾 Téléchargement du fichier...');
+                const blob = await response.blob();
+                console.log('📊 Taille du fichier:', blob.size, 'bytes');
+                console.log('📋 Type MIME du blob:', blob.type);
+                
+                if (blob.size === 0) {
+                    console.error('❌ Fichier vide reçu du serveur');
+                    notifications.error('Fichier Excel vide reçu du serveur');
+                    return;
+                }
+                
+                // Créer un nom de fichier unique avec timestamp et random pour éviter le cache
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const random = Math.random().toString(36).substring(2, 8);
+                const filename = `desorption_${timestamp.split('T')[0]}_${timestamp.split('T')[1].substring(0, 8)}_${random}.xlsx`;
+                
+                console.log('🔗 Création du téléchargement:', filename);
+                
+                // Méthode robuste pour forcer le téléchargement à chaque fois
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                
+                // Forcer le téléchargement immédiatement
+                document.body.appendChild(a);
+                
+                // Utiliser setTimeout pour s'assurer que le DOM est mis à jour
+                setTimeout(() => {
+                    a.click();
+                    console.log('✅ Clic de téléchargement déclenché');
+                    
+                    // Nettoyer après un délai plus long pour s'assurer que le téléchargement a démarré
+                    setTimeout(() => {
+                        if (a.parentNode) {
+                            document.body.removeChild(a);
+                        }
+                        URL.revokeObjectURL(url);
+                        console.log('🧹 Nettoyage effectué');
+                    }, 2000);
+                }, 100);
+                
+                console.log('✅ Téléchargement initié avec succès');
+                notifications.success('Fichier Excel exporté avec succès');
+                
+            } catch (e) {
+                console.error('❌ Erreur réseau:', e);
+                notifications.error('Erreur réseau lors de l\'export Excel: ' + e.message);
+            } finally {
+                exportInProgress = false;
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                console.log('🔄 Export terminé, bouton réactivé');
+            }
+        };
+
+        function generateReport(results) {
+            const now = new Date().toLocaleString('fr-FR');
+            let rapport = '='.repeat(80) + '\n';
+            rapport += 'RAPPORT D\'ANALYSE — DÉSORPTION À COURANT CROISÉ\n'.padStart(60) + '\n';
+            rapport += '='.repeat(80) + '\n\n';
+            rapport += `Date: ${now}\n\n`;
+            
+            rapport += '1. PARAMÈTRES D\'ENTRÉE\n';
+            rapport += '-'.repeat(40) + '\n';
+            rapport += `   Débit gaz G        : ${results.G || 'N/A'} mol/h\n`;
+            rapport += `   Débit liquide L    : ${results.L || 'N/A'} mol/h\n`;
+            rapport += `   Constante m        : ${results.m || 'N/A'}\n`;
+            rapport += `   Facteur S          : ${results.facteur_S || 'N/A'}\n`;
+            rapport += `   x₀ entrée          : ${results.x0 || 'N/A'}\n`;
+            rapport += `   x objectif         : ${results.x_obj || 'N/A'}\n\n`;
+            
+            rapport += '2. RÉSULTATS DE LA SIMULATION\n';
+            rapport += '-'.repeat(70) + '\n';
+            rapport += 'Étage    X entrée        Y entrée        X sortie        Y sortie        x sortie\n';
+            rapport += '-'.repeat(70) + '\n';
+            
+            results.resultats.forEach(res => {
+                rapport += `${res.etage.toString().padEnd(8)} ${res.X_entree.toFixed(4).padEnd(16)} ${res.Y_entree.toFixed(4).padEnd(16)} ${res.X_sortie.toFixed(4).padEnd(16)} ${res.Y_sortie.toFixed(4).padEnd(16)} ${res.x_sortie.toFixed(4)}\n`;
+            });
+            
+            rapport += '\n3. PERFORMANCES\n';
+            rapport += '-'.repeat(40) + '\n';
+            rapport += `   Étages nécessaires : ${results.nb_etages}\n`;
+            rapport += `   Taux de désorption : ${results.taux.toFixed(2)}%\n`;
+            rapport += `   Quantité désorbée  : ${results.quantite.toFixed(2)} mol/h\n`;
+            rapport += '\n' + '='.repeat(80) + '\n';
+            
+            return rapport;
+        }
+    </script>
+</body>
+</html>

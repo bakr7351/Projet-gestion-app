@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcul de Désorption - Accès Libre</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist@2.27.0/plotly.min.js"></script>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        :root {
+            --primary: #ec4899;
+            --primary-dark: #db2777;
+            --secondary: #f472b6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --border: #e2e8f0;
+        }
+        
+        [data-theme="dark"] {
+            --primary: #f472b6;
+            --primary-dark: #ec4899;
+            --secondary: #fbbf24;
+            --dark: #f8fafc;
+            --light: #0f172a;
+            --gray: #cbd5e1;
+            --border: #334155;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        /* Header moderne */
+        .top-bar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .top-bar-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .logo i {
+            font-size: 2rem;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(180deg);
+        }
+        
+        /* Container principal */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        /* Cards modernes */
+        .card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+        
+        [data-theme="dark"] .card {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        /* Formulaire moderne */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-group label i {
+            color: var(--primary);
+            width: 20px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: var(--light);
+            color: var(--dark);
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 0.25rem;
+            color: var(--gray);
+            font-size: 0.875rem;
+        }
+        
+        /* Boutons modernes */
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(236, 72, 153, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(236, 72, 153, 0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--light);
+            color: var(--dark);
+            border: 2px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* Stats cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+        
+        /* Graphiques */
+        .charts-container {
+            display: grid;
+            gap: 2rem;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem 0.5rem 2rem 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+        
+        [data-theme="dark"] .chart-card {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+            padding: 0 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .chart-wrapper {
+            width: 100%;
+            height: 700px;
+            margin-bottom: 1rem;
+        }
+        
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 6rem;
+        }
+        
+        /* Tableau moderne */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        [data-theme="dark"] table {
+            background: #1e293b;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+        
+        th, td {
+            padding: 1rem;
+            text-align: left;
+        }
+        
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+        }
+        
+        tbody tr:hover {
+            background: var(--light);
+        }
+        
+        [data-theme="dark"] tbody tr:hover {
+            background: #334155;
+        }
+        
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 3rem;
+            border-radius: 1rem;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        [data-theme="dark"] .loading-content {
+            background: #1e293b;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 600;
+            z-index: 10000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success { background: var(--success); }
+        .notification.error { background: var(--danger); }
+        .notification.warning { background: var(--warning); }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .top-bar-content {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="top-bar-content">
+            <div class="logo">
+                <i class="fas fa-arrow-up"></i>
+                <span>Désorption</span>
+            </div>
+            <div class="nav-menu">
+                <a href="/public/index.html" class="nav-btn">
+                    <i class="fas fa-home"></i> Accueil
+                </a>
+                <a href="/public/absorption.html" class="nav-btn">
+                    <i class="fas fa-arrow-down"></i> Absorption
+                </a>
+                <a href="/user/login.html" class="nav-btn">
+                    <i class="fas fa-sign-in-alt"></i> Connexion
+                </a>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container Principal -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header" style="text-align: center; margin-bottom: 2rem;">
+            <h1 id="page-title" style="font-size: 2.5rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;">
+                <i class="fas fa-arrow-up"></i> Calcul de Désorption
+            </h1>
+            <p id="page-subtitle" style="font-size: 1.25rem; color: var(--gray); margin-bottom: 1rem;">
+                Simulation du procédé de désorption à contre-courant
+            </p>
+            <!-- Toggle mode de contact -->
+            <div id="flow-mode-toggle" style="display:inline-flex;align-items:center;gap:0.75rem;margin-top:0.75rem;background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.2);border-radius:2rem;padding:0.35rem 1rem;">
+                <span style="font-size:0.85rem;opacity:0.7;">Mode :</span>
+                <button id="btn-counter" onclick="setFlowType('counter-current')" style="border:none;border-radius:1.5rem;padding:0.3rem 1rem;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all .2s;background:#6366f1;color:white;">
+                    <i class="fas fa-arrows-alt-v"></i> Contre-courant
+                </button>
+                <button id="btn-cross" onclick="setFlowType('cross-current')" style="border:none;border-radius:1.5rem;padding:0.3rem 1rem;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all .2s;background:transparent;color:rgba(236,72,153,0.7);">
+                    <i class="fas fa-random"></i> Courant croisé
+                </button>
+            </div>
+        </div>
+
+        <!-- Formulaire -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-calculator"></i>
+                    Paramètres de simulation
+                </h2>
+            </div>
+            
+            <form id="desorption-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-wind"></i>
+                            Débit gaz G (mol/h)
+                        </label>
+                        <input type="number" name="G" value="120" step="0.01" min="0.01" required>
+                        <small>Débit molaire du gaz de stripping</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-tint"></i>
+                            Débit liquide L (mol/h)
+                        </label>
+                        <input type="number" name="L" value="60" step="0.01" min="0.01" required>
+                        <small>Débit molaire du liquide</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-balance-scale"></i>
+                            Constante d'équilibre m
+                        </label>
+                        <input type="number" name="m" value="0.6" step="0.0001" min="0.0001" required>
+                        <small>Constante de Henry</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-arrow-right"></i>
+                            Fraction molaire entrée x₀
+                        </label>
+                        <input type="number" name="x0" value="0.08" step="0.0001" min="0" max="1" required>
+                        <small>Fraction molaire du soluté dans le liquide</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-arrow-left"></i>
+                            Fraction molaire gaz y₀
+                        </label>
+                        <input type="number" name="y0" value="0.0" step="0.0001" min="0" max="1">
+                        <small>Fraction molaire du soluté dans le gaz</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-bullseye"></i>
+                            Fraction objectif x_obj
+                        </label>
+                        <input type="number" name="x_obj" value="0.008" step="0.0001" min="0" max="1" required>
+                        <small>Fraction molaire objectif en sortie</small>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-play"></i>
+                        Lancer la simulation
+                    </button>
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i>
+                        Réinitialiser
+                    </button>
+                    <button type="button" class="btn btn-outline" onclick="loadExample()">
+                        <i class="fas fa-lightbulb"></i>
+                        Exemple
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Résultats -->
+        <div id="results-section" style="display: none;">
+            <!-- Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Résultats de la simulation
+                    </h2>
+                    <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+                        <button class="btn btn-outline" onclick="exportResults()">
+                            <i class="fas fa-download"></i>
+                            Exporter TXT
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="stats-grid" class="stats-grid"></div>
+            </div>
+
+            <!-- Graphiques -->
+            <div class="charts-container">
+                <!-- McCabe-Thiele -->
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-line"></i>
+                        Diagramme McCabe-Thiele
+                    </h3>
+                    <div id="mccabe-chart" class="chart-wrapper"></div>
+                </div>
+
+                <!-- Deux graphiques côte à côte -->
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <h3 class="chart-title">
+                            <i class="fas fa-chart-area"></i>
+                            Évolution des concentrations
+                        </h3>
+                        <div id="concentration-chart" class="chart-wrapper"></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3 class="chart-title">
+                            <i class="fas fa-cube"></i>
+                            Schéma de la colonne
+                        </h3>
+                        <div id="column-chart" class="chart-wrapper"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tableau -->
+            <div class="card">
+                <h3 class="card-title">
+                    <i class="fas fa-table"></i>
+                    Détails par étage
+                </h3>
+                <div class="table-wrapper">
+                    <table id="results-table">
+                        <thead>
+                            <tr>
+                                <th>Étage</th>
+                                <th>X entrée</th>
+                                <th>Y entrée</th>
+                                <th>X sortie</th>
+                                <th>Y sortie</th>
+                                <th>x sortie</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p style="font-size: 1.125rem; font-weight: 600;">Calcul en cours...</p>
+        </div>
+    </div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/notifications.js"></script>
+    <script>
+        let currentResults = null;
+        let currentFlowType = 'counter-current'; // Default flow type
+
+        function setFlowType(type) {
+            currentFlowType = type;
+            updateFlowTypeUI();
+            // Charger les paramètres par défaut selon le mode
+            if (type === 'cross-current') {
+                document.querySelector('[name="G"]').value = '150';
+                document.querySelector('[name="L"]').value = '80';
+                document.querySelector('[name="m"]').value = '0.5';
+                document.querySelector('[name="x0"]').value = '0.06';
+                document.querySelector('[name="y0"]').value = '0';
+                document.querySelector('[name="x_obj"]').value = '0.006';
+            } else {
+                document.querySelector('[name="G"]').value = '120';
+                document.querySelector('[name="L"]').value = '60';
+                document.querySelector('[name="m"]').value = '0.6';
+                document.querySelector('[name="x0"]').value = '0.08';
+                document.querySelector('[name="y0"]').value = '0.0';
+                document.querySelector('[name="x_obj"]').value = '0.008';
+            }
+        }
+
+        function toggleFlowType() {
+            currentFlowType = currentFlowType === 'counter-current' ? 'cross-current' : 'counter-current';
+            updateFlowTypeUI();
+        }
+
+        function updateFlowTypeUI() {
+            const btnCounter = document.getElementById('btn-counter');
+            const btnCross = document.getElementById('btn-cross');
+            const subtitle = document.getElementById('page-subtitle');
+
+            if (currentFlowType === 'cross-current') {
+                btnCounter.style.background = 'transparent';
+                btnCounter.style.color = 'rgba(236,72,153,0.7)';
+                btnCross.style.background = '#ff6b6b';
+                btnCross.style.color = 'white';
+                subtitle.textContent = "Simulation du procédé de désorption à courant croisé";
+            } else {
+                btnCross.style.background = 'transparent';
+                btnCross.style.color = 'rgba(236,72,153,0.7)';
+                btnCounter.style.background = '#6366f1';
+                btnCounter.style.color = 'white';
+                subtitle.textContent = "Simulation du procédé de désorption à contre-courant";
+            }
+            // Réinitialiser les résultats si on change de mode
+            document.getElementById('results-section').style.display = 'none';
+            currentResults = null;
+        }
+
+        function loadExample() {
+            if (currentFlowType === 'cross-current') {
+                document.querySelector('[name="G"]').value = '150';
+                document.querySelector('[name="L"]').value = '80';
+                document.querySelector('[name="m"]').value = '0.5';
+                document.querySelector('[name="x0"]').value = '0.06';
+                document.querySelector('[name="y0"]').value = '0';
+                document.querySelector('[name="x_obj"]').value = '0.006';
+            } else {
+                document.querySelector('[name="G"]').value = '120';
+                document.querySelector('[name="L"]').value = '60';
+                document.querySelector('[name="m"]').value = '0.6';
+                document.querySelector('[name="x0"]').value = '0.08';
+                document.querySelector('[name="y0"]').value = '0.0';
+                document.querySelector('[name="x_obj"]').value = '0.008';
+            }
+        }
+
+        function exportResults() {
+            if (!currentResults) {
+                notifications.warning('Aucun résultat à exporter');
+                return;
+            }
+            
+            const rapport = generateReport(currentResults.calculation_results);
+            const blob = new Blob([rapport], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rapport_desorption_${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            notifications.success('Rapport exporté avec succès');
+        }
+
+        function generateReport(results) {
+            const now = new Date().toLocaleString('fr-FR');
+            let rapport = '='.repeat(80) + '\n';
+            rapport += 'RAPPORT D\'ANALYSE — DÉSORPTION\n'.padStart(50) + '\n';
+            rapport += '='.repeat(80) + '\n\n';
+            rapport += `Date: ${now}\n\n`;
+            
+            rapport += '1. PARAMÈTRES D\'ENTRÉE\n';
+            rapport += '-'.repeat(40) + '\n';
+            rapport += `   Débit gaz G        : ${results.G || 'N/A'} mol/h\n`;
+            rapport += `   Débit liquide L    : ${results.L || 'N/A'} mol/h\n`;
+            rapport += `   Constante m        : ${results.m || 'N/A'}\n`;
+            rapport += `   Facteur S          : ${results.facteur_S || 'N/A'}\n`;
+            rapport += `   x₀ entrée          : ${results.x0 || 'N/A'}\n`;
+            rapport += `   x objectif         : ${results.x_obj || 'N/A'}\n\n`;
+            
+            rapport += '2. RÉSULTATS DE LA SIMULATION\n';
+            rapport += '-'.repeat(70) + '\n';
+            rapport += 'Étage    X entrée        Y entrée        X sortie        Y sortie        x sortie\n';
+            rapport += '-'.repeat(70) + '\n';
+            
+            results.resultats.forEach(res => {
+                rapport += `${res.etage.toString().padEnd(8)} ${res.X_entree.toFixed(6).padEnd(16)} ${res.Y_entree.toFixed(6).padEnd(16)} ${res.X_sortie.toFixed(6).padEnd(16)} ${res.Y_sortie.toFixed(6).padEnd(16)} ${res.x_sortie.toFixed(6)}\n`;
+            });
+            
+            rapport += '\n3. PERFORMANCES\n';
+            rapport += '-'.repeat(40) + '\n';
+            rapport += `   Étages nécessaires : ${results.nb_etages}\n`;
+            rapport += `   Taux de désorption : ${results.taux.toFixed(2)}%\n`;
+            rapport += `   Quantité désorbée  : ${results.quantite.toFixed(2)} mol/h\n`;
+            rapport += '\n' + '='.repeat(80) + '\n';
+            
+            return rapport;
+        }
+
+        document.getElementById('desorption-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            if (parseFloat(data.x_obj) >= parseFloat(data.x0)) {
+                notifications.error('La fraction objectif doit être inférieure à la fraction d\'entrée');
+                return;
+            }
+
+            document.getElementById('loading-overlay').style.display = 'flex';
+            
+            try {
+                // Utiliser le type de flux sélectionné via le bouton
+                const endpoint = currentFlowType === 'cross-current'
+                    ? '/api/calculations/desorption-cross-current'
+                    : '/api/calculations/desorption';
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Anonymous-Access': 'true'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    currentResults = result.data;
+                    displayResults(result.data.calculation_results);
+                    notifications.success('Simulation terminée avec succès');
+                } else {
+                    notifications.error(result.message || 'Erreur lors du calcul');
+                }
+            } catch (error) {
+                notifications.error('Erreur de connexion');
+            } finally {
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
+        });
+
+        function displayResults(results) {
+            document.getElementById('results-section').style.display = 'block';
+            
+            // Stats
+            const perf = results.performance || {};
+            document.getElementById('stats-grid').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${results.nb_etages}</div>
+                    <div class="stat-label">Étages nécessaires</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${results.taux.toFixed(2)}%</div>
+                    <div class="stat-label">Taux de désorption</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${results.quantite.toFixed(2)}</div>
+                    <div class="stat-label">Quantité désorbée (mol/h)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${results.facteur_S.toFixed(3)}</div>
+                    <div class="stat-label">Facteur S</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${perf.execution_time_ms || 0}</div>
+                    <div class="stat-label">Temps (ms)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${perf.memory_usage_mb || 0}</div>
+                    <div class="stat-label">Mémoire (MB)</div>
+                </div>
+            `;
+            
+            // Graphiques
+            if (currentResults.matplotlib_mccabe_graph) {
+                renderPlotly('mccabe-chart', currentResults.matplotlib_mccabe_graph);
+            }
+            if (currentResults.concentration_evolution_graph) {
+                renderPlotly('concentration-chart', currentResults.concentration_evolution_graph);
+            }
+            if (currentResults['3d_profile_graph']) {
+                renderPlotly('column-chart', currentResults['3d_profile_graph']);
+            }
+            
+            // Tableau
+            const tbody = document.querySelector('#results-table tbody');
+            tbody.innerHTML = results.resultats.map(r => `
+                <tr>
+                    <td>${r.etage}</td>
+                    <td>${r.X_entree.toFixed(6)}</td>
+                    <td>${r.Y_entree.toFixed(6)}</td>
+                    <td>${r.X_sortie.toFixed(6)}</td>
+                    <td>${r.Y_sortie.toFixed(6)}</td>
+                    <td>${r.x_sortie.toFixed(6)}</td>
+                </tr>
+            `).join('');
+            
+            document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderPlotly(containerId, data) {
+            const plotData = typeof data === 'string' ? JSON.parse(data) : data;
+            
+            // Appliquer le thème actuel
+            applyThemeToPlotly(plotData);
+            
+            // Forcer le graphique à utiliser 100% de la hauteur du conteneur
+            plotData.layout.autosize = true;
+            plotData.layout.height = null;
+            
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                displaylogo: false
+            };
+            
+            Plotly.newPlot(containerId, plotData.data, plotData.layout, config);
+        }
+        
+        function applyThemeToPlotly(plotData) {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            
+            if (isDark) {
+                // Thème sombre
+                plotData.layout.paper_bgcolor = '#1e293b';
+                plotData.layout.plot_bgcolor = '#0f172a';
+                plotData.layout.font = { color: '#e2e8f0' };
+                
+                // Mettre à jour les axes
+                if (plotData.layout.xaxis) {
+                    plotData.layout.xaxis.gridcolor = '#334155';
+                    plotData.layout.xaxis.color = '#e2e8f0';
+                }
+                if (plotData.layout.yaxis) {
+                    plotData.layout.yaxis.gridcolor = '#334155';
+                    plotData.layout.yaxis.color = '#e2e8f0';
+                }
+                
+                // Pour les graphiques 3D
+                if (plotData.layout.scene) {
+                    plotData.layout.scene.bgcolor = '#0f172a';
+                    if (plotData.layout.scene.xaxis) {
+                        plotData.layout.scene.xaxis.gridcolor = '#334155';
+                        plotData.layout.scene.xaxis.color = '#e2e8f0';
+                    }
+                    if (plotData.layout.scene.yaxis) {
+                        plotData.layout.scene.yaxis.gridcolor = '#334155';
+                        plotData.layout.scene.yaxis.color = '#e2e8f0';
+                    }
+                    if (plotData.layout.scene.zaxis) {
+                        plotData.layout.scene.zaxis.gridcolor = '#334155';
+                        plotData.layout.scene.zaxis.color = '#e2e8f0';
+                    }
+                }
+            } else {
+                // Thème clair
+                plotData.layout.paper_bgcolor = '#ffffff';
+                plotData.layout.plot_bgcolor = '#f8fafc';
+                plotData.layout.font = { color: '#1e293b' };
+                
+                // Mettre à jour les axes
+                if (plotData.layout.xaxis) {
+                    plotData.layout.xaxis.gridcolor = '#e2e8f0';
+                    plotData.layout.xaxis.color = '#1e293b';
+                }
+                if (plotData.layout.yaxis) {
+                    plotData.layout.yaxis.gridcolor = '#e2e8f0';
+                    plotData.layout.yaxis.color = '#1e293b';
+                }
+                
+                // Pour les graphiques 3D
+                if (plotData.layout.scene) {
+                    plotData.layout.scene.bgcolor = '#f8fafc';
+                    if (plotData.layout.scene.xaxis) {
+                        plotData.layout.scene.xaxis.gridcolor = '#e2e8f0';
+                        plotData.layout.scene.xaxis.color = '#1e293b';
+                    }
+                    if (plotData.layout.scene.yaxis) {
+                        plotData.layout.scene.yaxis.gridcolor = '#e2e8f0';
+                        plotData.layout.scene.yaxis.color = '#1e293b';
+                    }
+                    if (plotData.layout.scene.zaxis) {
+                        plotData.layout.scene.zaxis.gridcolor = '#e2e8f0';
+                        plotData.layout.scene.zaxis.color = '#1e293b';
+                    }
+                }
+            }
+        }
+        
+        function updateAllChartsTheme() {
+            if (!currentResults) return;
+            
+            // Mettre à jour tous les graphiques
+            if (currentResults.matplotlib_mccabe_graph) {
+                renderPlotly('mccabe-chart', currentResults.matplotlib_mccabe_graph);
+            }
+            if (currentResults.concentration_evolution_graph) {
+                renderPlotly('concentration-chart', currentResults.concentration_evolution_graph);
+            }
+            if (currentResults['3d_profile_graph']) {
+                renderPlotly('column-chart', currentResults['3d_profile_graph']);
+            }
+        }
+        
+        // Observer les changements de thème
+        const themeObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                    updateAllChartsTheme();
+                }
+            });
+        });
+        
+        // Démarrer l'observation du thème
+        themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
+        });
+    </script>
+</body>
+</html>

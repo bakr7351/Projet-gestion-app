@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulateur McCabe-Thiele</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --absorption-color: #17a2b8;
+            --desorption-color: #ffc107;
+            --text-color: #333;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --shadow: rgba(0,0,0,0.1);
+            --border-color: #e2e8f0;
+        }
+        
+        [data-theme="dark"] {
+            --primary-color: #8b5cf6;
+            --secondary-color: #a855f7;
+            --absorption-color: #17a2b8;
+            --desorption-color: #ffc107;
+            --text-color: #e2e8f0;
+            --bg-color: #0f0f23;
+            --card-bg: #1e1b4b;
+            --shadow: rgba(0,0,0,0.3);
+            --border-color: #3730a3;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, var(--bg-color) 0%, var(--primary-color) 100%);
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px var(--shadow);
+        }
+        
+        .header h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .nav-tab {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--card-bg);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+        }
+        
+        .nav-tab.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-color: transparent;
+        }
+        
+        .nav-tab:hover:not(.active) {
+            background: var(--border-color);
+        }
+        
+        .nav-links {
+            margin-top: 15px;
+        }
+        
+        .nav-links a {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 0 5px;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background: var(--secondary-color);
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px var(--shadow);
+        }
+        
+        .params-card {
+            border-top: 4px solid var(--primary-color);
+        }
+        
+        .params-card.absorption {
+            border-top-color: var(--absorption-color);
+        }
+        
+        .params-card.desorption {
+            border-top-color: var(--desorption-color);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: var(--text-color);
+            opacity: 0.7;
+            font-size: 0.85rem;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-absorption {
+            background: var(--absorption-color);
+            color: white;
+        }
+        
+        .btn-desorption {
+            background: var(--desorption-color);
+            color: #333;
+        }
+        
+        .graph-card {
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .graph-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+        
+        .placeholder {
+            text-align: center;
+            color: var(--text-color);
+            opacity: 0.6;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .loading i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème">🌙</button>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-flask"></i> Simulateur McCabe-Thiele</h1>
+            <p>Méthode graphique pour le dimensionnement des colonnes</p>
+            
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="switchTab('absorption')">
+                    <i class="fas fa-arrow-down"></i> Absorption
+                </button>
+                <button class="nav-tab" onclick="switchTab('desorption')">
+                    <i class="fas fa-arrow-up"></i> Désorption
+                </button>
+            </div>
+            
+            <div class="nav-links">
+                <a href="/public/index.html"><i class="fas fa-home"></i> Accueil</a>
+                <a href="/public/absorption.html"><i class="fas fa-calculator"></i> Calculs détaillés</a>
+                <a href="/user/login.html"><i class="fas fa-sign-in-alt"></i> Connexion</a>
+            </div>
+        </div>
+
+        <!-- Absorption Tab -->
+        <div id="absorption-tab" class="tab-content active">
+            <div class="content">
+                <div class="card params-card absorption">
+                    <h3><i class="fas fa-sliders-h"></i> Paramètres d'absorption</h3>
+                    <form id="absorption-form" onsubmit="return submitForm(event, 'absorption')">
+                        <div class="form-group">
+                            <label>Débit gaz G' (mol/h)</label>
+                            <input type="number" step="any" name="G" value="120" required>
+                            <small>Débit molaire du gaz porteur</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Débit solvant L' (mol/h)</label>
+                            <input type="number" step="any" name="L" value="180" required>
+                            <small>Débit molaire du solvant</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Constante d'équilibre m</label>
+                            <input type="number" step="any" name="m" value="0.6" required>
+                            <small>Constante de Henry</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Fraction entrée gaz (y_in)</label>
+                            <input type="number" step="any" name="y_in" value="0.08" required>
+                            <small>Fraction molaire du soluté dans le gaz</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Fraction entrée liquide (x_in)</label>
+                            <input type="number" step="any" name="x_in" value="0.0" required>
+                            <small>Fraction molaire du soluté dans le liquide</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label style="color: var(--absorption-color);">Fraction objectif gaz (y_out)</label>
+                            <input type="number" step="any" name="target_out" value="0.008" required>
+                            <small>Fraction molaire objectif en sortie</small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-absorption">
+                            <i class="fas fa-chart-line"></i> Tracer le diagramme
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="card graph-card">
+                    <div id="absorption-loading" class="loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>Génération du graphique...</p>
+                    </div>
+                    <div id="absorption-graph" class="placeholder">
+                        <i class="fas fa-chart-area" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;"></i>
+                        <p>Ajustez les paramètres et cliquez sur "Tracer le diagramme"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Desorption Tab -->
+        <div id="desorption-tab" class="tab-content">
+            <div class="content">
+                <div class="card params-card desorption">
+                    <h3><i class="fas fa-sliders-h"></i> Paramètres de désorption</h3>
+                    <form id="desorption-form" onsubmit="return submitForm(event, 'desorption')">
+                        <div class="form-group">
+                            <label>Débit gaz G (mol/h)</label>
+                            <input type="number" step="any" name="G" value="120" required>
+                            <small>Débit molaire du gaz de stripping</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Débit liquide L (mol/h)</label>
+                            <input type="number" step="any" name="L" value="60" required>
+                            <small>Débit molaire du liquide</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Constante d'équilibre m</label>
+                            <input type="number" step="any" name="m" value="0.6" required>
+                            <small>Constante de Henry</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Fraction entrée liquide (x_in)</label>
+                            <input type="number" step="any" name="x_in" value="0.08" required>
+                            <small>Fraction molaire du soluté dans le liquide</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Fraction entrée gaz (y_in)</label>
+                            <input type="number" step="any" name="y_in" value="0.0" required>
+                            <small>Fraction molaire du soluté dans le gaz</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label style="color: var(--desorption-color);">Fraction objectif liquide (x_out)</label>
+                            <input type="number" step="any" name="target_out" value="0.008" required>
+                            <small>Fraction molaire objectif en sortie</small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-desorption">
+                            <i class="fas fa-chart-line"></i> Tracer le diagramme
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="card graph-card">
+                    <div id="desorption-loading" class="loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>Génération du graphique...</p>
+                    </div>
+                    <div id="desorption-graph" class="placeholder">
+                        <i class="fas fa-chart-area" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;"></i>
+                        <p>Ajustez les paramètres et cliquez sur "Tracer le diagramme"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.nav-tab').classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tab + '-tab').classList.add('active');
+        }
+        
+        async function submitForm(event, operation) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            data.operation = operation;
+            
+            const loadingEl = document.getElementById(operation + '-loading');
+            const graphEl = document.getElementById(operation + '-graph');
+            
+            loadingEl.classList.add('show');
+            graphEl.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/mccabe/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Anonymous-Access': 'true'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    graphEl.innerHTML = `<img src="data:image/png;base64,${result.plot_url}" alt="Diagramme McCabe-Thiele">`;
+                } else {
+                    graphEl.innerHTML = `<div class="placeholder" style="color: #ef4444;"><i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 20px;"></i><p>${result.message || 'Erreur lors de la génération du graphique'}</p></div>`;
+                }
+            } catch (error) {
+                graphEl.innerHTML = `<div class="placeholder" style="color: #ef4444;"><i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 20px;"></i><p>Erreur de connexion: ${error.message}</p></div>`;
+            } finally {
+                loadingEl.classList.remove('show');
+            }
+            
+            return false;
+        }
+        
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            const btn = document.querySelector('.theme-toggle');
+            btn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+        
+        // Load saved theme
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            const btn = document.querySelector('.theme-toggle');
+            btn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        });
+    </script>
+</body>
+</html>

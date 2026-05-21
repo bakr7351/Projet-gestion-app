@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Absorption</title>
+  <link rel="stylesheet" href="/css/user.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a href="/user/dashboard.html" class="brand">🔬 <span>Absorption</span></a>
+    <nav>
+      <a href="/user/dashboard.html" class="active">Dashboard</a>
+      <a href="/user/profile.html">Profil</a>
+      <a href="/user/history.html">Historique</a>
+    </nav>
+    <div class="user-menu"><button class="theme-toggle-inline" onclick="toggleTheme()" title="Changer le th�me">??</button>
+      <div class="user-avatar" id="avatarInitial">?</div>
+      <button class="btn-logout" id="logoutBtn">Déconnexion</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1 id="welcomeMsg">Bonjour 👋</h1>
+      <p>Bienvenue sur votre espace personnel.</p>
+    </div>
+
+    <div id="alert" class="alert"></div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon">🧮</div>
+        <div>
+          <div class="stat-value" id="statCalc">—</div>
+          <div class="stat-label">Calculs effectués</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📋</div>
+        <div>
+          <div class="stat-value" id="statHistory">—</div>
+          <div class="stat-label">Actions enregistrées</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Mon compte</h2>
+        <a href="profile.html" class="btn btn-outline btn-sm">Modifier</a>
+      </div>
+      <div class="info-grid" id="profileInfo">
+        <p style="color:var(--muted)">Chargement...</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2>Modules de calcul</h2></div>
+      <div class="modules-grid">
+        <div class="module-card">
+          <div class="module-icon">
+            <i class="fas fa-arrow-down"></i>
+          </div>
+          <div class="module-content">
+            <h3>Absorption</h3>
+            <p>Simulation du procédé d'absorption à courant croisé</p>
+            <a href="/user/absorption.html" class="btn btn-primary btn-sm">
+              <i class="fas fa-calculator"></i>
+              Calculer
+            </a>
+          </div>
+        </div>
+        
+        <div class="module-card">
+          <div class="module-icon">
+            <i class="fas fa-arrow-up"></i>
+          </div>
+          <div class="module-content">
+            <h3>Désorption</h3>
+            <p>Simulation du procédé de désorption à courant croisé</p>
+            <a href="/user/desorption.html" class="btn btn-primary btn-sm">
+              <i class="fas fa-calculator"></i>
+              Calculer
+            </a>
+          </div>
+        </div>
+
+        <div class="module-card">
+          <div class="module-icon">
+            <i class="fas fa-robot"></i>
+          </div>
+          <div class="module-content">
+            <h3>Assistant AI Universel</h3>
+            <p>Posez n'importe quelle question ! Sciences, technologie, culture...</p>
+            <a href="/user/assistant.html" class="btn btn-primary btn-sm">
+              <i class="fas fa-comments"></i>
+              Discuter
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/theme.js"></script><script src="/js/api.js"></script>
+  <script src="/js/utils.js"></script>
+  <script>
+    requireAuth("../user/login.html");
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      clearToken();
+      window.location.href = "/user/login.html";
+    });
+
+    async function loadDashboard() {
+      const res = await UserAPI.dashboard();
+      if (!res || !res.ok) { showAlert(document.getElementById("alert"), res?.data?.message || "Erreur", "error"); return; }
+      const { user } = res.data;
+
+      document.getElementById("welcomeMsg").textContent = `Bonjour, ${user.prenom} 👋`;
+      document.getElementById("avatarInitial").textContent = (user.prenom?.[0] || "?").toUpperCase();
+
+      document.getElementById("profileInfo").innerHTML = `
+        <div class="info-item"><label>Nom complet</label><p>${user.nom} ${user.prenom}</p></div>
+        <div class="info-item"><label>Email</label><p>${user.email}</p></div>
+        <div class="info-item"><label>Rôle</label><p>${roleBadge(user.role)}</p></div>
+        <div class="info-item"><label>Statut</label><p>${statusBadge(user.statut)}</p></div>
+        <div class="info-item"><label>Membre depuis</label><p>${formatDate(user.created_at)}</p></div>
+      `;
+
+      // Load real calculation count from history API
+      loadCalcCount();
+    }
+
+    async function loadCalcCount() {
+      const token = getToken();
+      if (!token) return;
+      try {
+        const response = await fetch("http://127.0.0.1:5000/api/history?page=1&per_page=1", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data.success && data.pagination) {
+          document.getElementById("statCalc").textContent = data.pagination.total;
+        }
+      } catch (e) {
+        // silently fail — not critical
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>
+
+
