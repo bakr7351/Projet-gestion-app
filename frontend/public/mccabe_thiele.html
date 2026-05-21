@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphiques McCabe-Thiele - Calculs Chimiques</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --dark-bg: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-light: #ecf0f1;
+            --border-color: #444;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #34495e;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --bg-color: var(--dark-bg);
+            --card-bg: var(--card-bg);
+            --text-color: var(--text-light);
+            --border-color: var(--border-color);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--bg-color, #f8f9fa);
+            color: var(--text-color, #2c3e50);
+            transition: all 0.3s ease;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animations de fond */
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 20s infinite linear;
+        }
+
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            background: var(--secondary-color);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 60px;
+            height: 60px;
+            background: var(--accent-color);
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+            top: 60%;
+            left: 80%;
+            animation-delay: -5s;
+        }
+
+        .shape:nth-child(3) {
+            width: 100px;
+            height: 100px;
+            background: var(--success-color);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            top: 30%;
+            left: 60%;
+            animation-delay: -10s;
+        }
+
+        .shape:nth-child(4) {
+            width: 70px;
+            height: 70px;
+            background: var(--warning-color);
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+            top: 80%;
+            left: 20%;
+            animation-delay: -15s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+            }
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-links a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            background: none;
+            border: 2px solid white;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .theme-toggle:hover {
+            background: white;
+            color: var(--primary-color);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-title p {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        /* Calculation Forms */
+        .calculation-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .calc-card {
+            background: var(--card-bg, white);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color, #e0e0e0);
+        }
+
+        .calc-card h2 {
+            color: var(--secondary-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-color, #2c3e50);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color, #ddd);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--bg-color, white);
+            color: var(--text-color, #2c3e50);
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-right: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-example {
+            background: linear-gradient(135deg, var(--success-color), var(--warning-color));
+        }
+
+        /* Graph Containers */
+        .graphs-section {
+            margin-top: 3rem;
+        }
+
+        .graph-container {
+            background: var(--card-bg, white);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color, #e0e0e0);
+        }
+
+        .graph-container h3 {
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .graph-placeholder {
+            height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color, #f8f9fa);
+            border: 2px dashed var(--border-color, #ddd);
+            border-radius: 10px;
+            color: var(--text-color, #666);
+            font-size: 1.1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .calculation-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animation de fond -->
+    <div class="background-animation">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <h1>📊 Graphiques McCabe-Thiele</h1>
+            </div>
+            <nav class="nav-links">
+                <a href="/">🏠 Accueil</a>
+                <a href="/public/absorption.html">📈 Absorption</a>
+                <a href="/public/desorption.html">📉 Désorption</a>
+                <button class="theme-toggle" onclick="toggleTheme()">🌙 Mode Sombre</button>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-title">
+            <h1>Diagrammes McCabe-Thiele Interactifs</h1>
+            <p>Visualisation avancée des procédés d'absorption et de désorption avec graphiques 2D et 3D</p>
+        </div>
+
+        <!-- Section des calculs -->
+        <div class="calculation-section">
+            <!-- Absorption -->
+            <div class="calc-card">
+                <h2>🔵 Absorption</h2>
+                <form id="absorptionForm">
+                    <div class="form-group">
+                        <label for="abs_L">Débit solvant L' (mol/h):</label>
+                        <input type="number" id="abs_L" value="200" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="abs_G">Débit gaz G' (mol/h):</label>
+                        <input type="number" id="abs_G" value="150" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="abs_m">Constante d'équilibre m:</label>
+                        <input type="number" id="abs_m" value="0.5" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="abs_y_in">Fraction molaire y₀ (entrée):</label>
+                        <input type="number" id="abs_y_in" value="0.06" step="0.001" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="abs_x_in">Fraction molaire x₀ (entrée):</label>
+                        <input type="number" id="abs_x_in" value="0.0" step="0.001" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="abs_y_obj">Fraction molaire y objectif:</label>
+                        <input type="number" id="abs_y_obj" value="0.006" step="0.001" required>
+                    </div>
+                    <button type="button" class="btn btn-example" onclick="loadAbsorptionExample()">📋 Exemple</button>
+                    <button type="submit" class="btn">🚀 Calculer Absorption</button>
+                </form>
+            </div>
+
+            <!-- Désorption -->
+            <div class="calc-card">
+                <h2>🔴 Désorption</h2>
+                <form id="desorptionForm">
+                    <div class="form-group">
+                        <label for="des_L">Débit liquide L (mol/h):</label>
+                        <input type="number" id="des_L" value="120" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="des_G">Débit gaz G (mol/h):</label>
+                        <input type="number" id="des_G" value="80" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="des_m">Constante d'équilibre m:</label>
+                        <input type="number" id="des_m" value="0.7" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="des_x_in">Fraction molaire x₀ (entrée):</label>
+                        <input type="number" id="des_x_in" value="0.06" step="0.001" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="des_y_in">Fraction molaire y₀ (entrée):</label>
+                        <input type="number" id="des_y_in" value="0.0" step="0.001" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="des_x_obj">Fraction molaire x objectif:</label>
+                        <input type="number" id="des_x_obj" value="0.006" step="0.001" required>
+                    </div>
+                    <button type="button" class="btn btn-example" onclick="loadDesorptionExample()">📋 Exemple</button>
+                    <button type="submit" class="btn">🚀 Calculer Désorption</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Section des graphiques -->
+        <div class="graphs-section">
+            <!-- Graphique McCabe-Thiele 2D -->
+            <div class="graph-container">
+                <h3>📊 Diagramme McCabe-Thiele 2D</h3>
+                <div id="mccabe2d" class="graph-placeholder">
+                    Effectuez un calcul pour voir le diagramme McCabe-Thiele
+                </div>
+            </div>
+
+            <!-- Graphique 3D -->
+            <div class="graph-container">
+                <h3>🌐 Surface 3D - Analyse paramétrique</h3>
+                <div id="surface3d" class="graph-placeholder">
+                    Effectuez un calcul pour voir la surface 3D
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentTheme = localStorage.getItem('theme') || 'light';
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTheme();
+            setupEventListeners();
+        });
+
+        function initializeTheme() {
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            updateThemeButton();
+        }
+
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+            updateThemeButton();
+        }
+
+        function updateThemeButton() {
+            const button = document.querySelector('.theme-toggle');
+            button.textContent = currentTheme === 'light' ? '🌙 Mode Sombre' : '☀️ Mode Clair';
+        }
+
+        function setupEventListeners() {
+            document.getElementById('absorptionForm').addEventListener('submit', handleAbsorptionSubmit);
+            document.getElementById('desorptionForm').addEventListener('submit', handleDesorptionSubmit);
+        }
+
+        function loadAbsorptionExample() {
+            document.getElementById('abs_L').value = 200;
+            document.getElementById('abs_G').value = 150;
+            document.getElementById('abs_m').value = 0.5;
+            document.getElementById('abs_y_in').value = 0.06;
+            document.getElementById('abs_x_in').value = 0.0;
+            document.getElementById('abs_y_obj').value = 0.006;
+        }
+
+        function loadDesorptionExample() {
+            document.getElementById('des_L').value = 120;
+            document.getElementById('des_G').value = 80;
+            document.getElementById('des_m').value = 0.7;
+            document.getElementById('des_x_in').value = 0.06;
+            document.getElementById('des_y_in').value = 0.0;
+            document.getElementById('des_x_obj').value = 0.006;
+        }
+
+        async function handleAbsorptionSubmit(e) {
+            e.preventDefault();
+            
+            const formData = {
+                G_prime: parseFloat(document.getElementById('abs_G').value),
+                L_prime: parseFloat(document.getElementById('abs_L').value),
+                m: parseFloat(document.getElementById('abs_m').value),
+                y0: parseFloat(document.getElementById('abs_y_in').value),
+                y_obj: parseFloat(document.getElementById('abs_y_obj').value)
+            };
+
+            try {
+                showLoading('absorption');
+                const response = await fetch('/api/v1/calculations/absorption', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Anonymous-Access': 'true'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayGraphs(data.data);
+                    showNotification('Calcul d\'absorption terminé avec succès!', 'success');
+                } else {
+                    throw new Error(data.error?.message || 'Erreur de calcul');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification('Erreur lors du calcul: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function handleDesorptionSubmit(e) {
+            e.preventDefault();
+            
+            const formData = {
+                G: parseFloat(document.getElementById('des_G').value),
+                L: parseFloat(document.getElementById('des_L').value),
+                m: parseFloat(document.getElementById('des_m').value),
+                x0: parseFloat(document.getElementById('des_x_in').value),
+                x_obj: parseFloat(document.getElementById('des_x_obj').value)
+            };
+
+            try {
+                showLoading('desorption');
+                const response = await fetch('/api/v1/calculations/desorption', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Anonymous-Access': 'true'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayGraphs(data.data);
+                    showNotification('Calcul de désorption terminé avec succès!', 'success');
+                } else {
+                    throw new Error(data.error?.message || 'Erreur de calcul');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification('Erreur lors du calcul: ' + error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function displayGraphs(data) {
+            // Afficher le graphique McCabe-Thiele 2D
+            if (data.mccabe_thiele_graph) {
+                const graphData = JSON.parse(data.mccabe_thiele_graph);
+                Plotly.newPlot('mccabe2d', graphData.data, graphData.layout, {responsive: true});
+            }
+
+            // Afficher le graphique 3D
+            if (data.surface_3d_graph) {
+                const surface3dData = JSON.parse(data.surface_3d_graph);
+                Plotly.newPlot('surface3d', surface3dData.data, surface3dData.layout, {responsive: true});
+            }
+        }
+
+        function showLoading(type) {
+            const button = document.querySelector(`#${type}Form button[type="submit"]`);
+            const originalText = button.textContent;
+            button.innerHTML = '<span class="loading"></span> Calcul en cours...';
+            button.disabled = true;
+            button.dataset.originalText = originalText;
+        }
+
+        function hideLoading() {
+            const buttons = document.querySelectorAll('button[type="submit"]');
+            buttons.forEach(button => {
+                if (button.dataset.originalText) {
+                    button.textContent = button.dataset.originalText;
+                    button.disabled = false;
+                    delete button.dataset.originalText;
+                }
+            });
+        }
+
+        function showNotification(message, type = 'info') {
+            // Créer la notification
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 1000;
+                max-width: 400px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+
+            // Couleurs selon le type
+            const colors = {
+                success: '#27ae60',
+                error: '#e74c3c',
+                warning: '#f39c12',
+                info: '#3498db'
+            };
+
+            notification.style.backgroundColor = colors[type] || colors.info;
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
+            // Animation d'entrée
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+
+            // Suppression automatique
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 4000);
+        }
+    </script>
+</body>
+</html>

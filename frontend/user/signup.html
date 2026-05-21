@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inscription — Absorption</title>
+  <link rel="stylesheet" href="/css/auth.css" />
+</head>
+<body>
+  <div class="auth-layout">
+    <div class="auth-brand-panel">
+      <div class="logo">🔬</div>
+      <h1>Absorption</h1>
+      <p>Rejoignez la plateforme et commencez vos analyses</p>
+      <div class="features">
+        <div class="feature-item"><span>✦</span><span>Inscription gratuite</span></div>
+        <div class="feature-item"><span>✦</span><span>Accès immédiat après vérification</span></div>
+        <div class="feature-item"><span>✦</span><span>Données sécurisées</span></div>
+      </div>
+    </div>
+
+    <div class="auth-form-panel">
+      <h2>Créer un compte</h2>
+      <p class="subtitle">Remplissez le formulaire pour commencer</p>
+
+      <div id="alert" class="alert"></div>
+
+      <form id="signupForm" novalidate>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="nom">Nom</label>
+            <input type="text" id="nom" placeholder="Dupont" />
+            <span class="field-error" id="nomErr"></span>
+          </div>
+          <div class="form-group">
+            <label for="prenom">Prénom</label>
+            <input type="text" id="prenom" placeholder="Alice" />
+            <span class="field-error" id="prenomErr"></span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="vous@exemple.com" />
+          <span class="field-error" id="emailErr"></span>
+        </div>
+        <div class="form-group">
+          <label for="password">Mot de passe <small style="text-transform:none;font-weight:400">(min. 8 caractères)</small></label>
+          <input type="password" id="password" placeholder="••••••••" oninput="checkStrength(this.value)" />
+          <div id="strengthBar" style="height:5px;border-radius:3px;margin-top:6px;transition:all .3s;width:0"></div>
+          <div id="strengthLabel" style="font-size:12px;margin-top:3px"></div>
+          <span class="field-error" id="passwordErr"></span>
+        </div>
+        <div class="form-group">
+          <label for="confirm">Confirmer le mot de passe</label>
+          <input type="password" id="confirm" placeholder="••••••••" />
+          <span class="field-error" id="confirmErr"></span>
+        </div>
+        <button type="submit" class="btn-submit" id="submitBtn" disabled>
+          <span class="spinner" id="spinner"></span>
+          Créer mon compte
+        </button>
+      </form>
+
+      <p class="auth-footer">
+        Déjà un compte ? <a href="login.html">Se connecter</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="/js/theme.js"></script>
+  <script src="/js/notifications.js"></script>
+  <script src="/js/loading.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/particles.js"></script>
+  <script>
+    function checkStrength(pw) {
+      const bar = document.getElementById("strengthBar");
+      const label = document.getElementById("strengthLabel");
+      if (!pw) { bar.style.width = "0"; label.textContent = ""; return; }
+      let score = 0;
+      if (pw.length >= 8)  score++;
+      if (pw.length >= 12) score++;
+      if (/[A-Z]/.test(pw)) score++;
+      if (/[0-9]/.test(pw)) score++;
+      if (/[^A-Za-z0-9]/.test(pw)) score++;
+      if (score <= 2) {
+        bar.style.cssText = "height:5px;border-radius:3px;margin-top:6px;transition:all .3s;width:33%;background:#ef4444";
+        label.textContent = "Faible"; label.style.color = "#ef4444";
+      } else if (score <= 3) {
+        bar.style.cssText = "height:5px;border-radius:3px;margin-top:6px;transition:all .3s;width:66%;background:#f59e0b";
+        label.textContent = "Moyen"; label.style.color = "#f59e0b";
+      } else {
+        bar.style.cssText = "height:5px;border-radius:3px;margin-top:6px;transition:all .3s;width:100%;background:#22c55e";
+        label.textContent = "Fort ✓"; label.style.color = "#22c55e";
+      }
+    }
+
+    const form      = document.getElementById("signupForm");
+    const alertEl   = document.getElementById("alert");
+    const submitBtn = document.getElementById("submitBtn");
+    const spinner   = document.getElementById("spinner");
+    const fields    = ["nom", "prenom", "email", "password", "confirm"];
+
+    fields.forEach(id => {
+      document.getElementById(id).addEventListener("input", () => {
+        submitBtn.disabled = !fields.every(f => document.getElementById(f).value.trim() !== "");
+      });
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideAlert(alertEl);
+      fields.forEach(id => clearFieldError(document.getElementById(id), document.getElementById(id + "Err")));
+
+      const nom      = document.getElementById("nom").value.trim();
+      const prenom   = document.getElementById("prenom").value.trim();
+      const email    = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const confirm  = document.getElementById("confirm").value;
+
+      let valid = true;
+      if (!nom)              { showFieldError(document.getElementById("nom"),      document.getElementById("nomErr"),      "Nom requis"); valid = false; }
+      if (!prenom)           { showFieldError(document.getElementById("prenom"),   document.getElementById("prenomErr"),   "Prénom requis"); valid = false; }
+      if (!email)            { showFieldError(document.getElementById("email"),    document.getElementById("emailErr"),    "Email requis"); valid = false; }
+      if (password.length < 8) { showFieldError(document.getElementById("password"), document.getElementById("passwordErr"), "Minimum 8 caractères"); valid = false; }
+      if (password !== confirm) { showFieldError(document.getElementById("confirm"),  document.getElementById("confirmErr"),  "Les mots de passe ne correspondent pas"); valid = false; }
+      if (!valid) return;
+
+      loading.setButtonLoading(submitBtn, true);
+      const res = await Auth.signup({ nom, prenom, email, password, confirm_password: confirm });
+      loading.setButtonLoading(submitBtn, false);
+      if (!res || !res.ok) { 
+        notifications.error(res?.data?.message || "Erreur lors de l'inscription", {
+          title: "Inscription échouée"
+        });
+        return; 
+      }
+      
+      notifications.success(res.data.message, {
+        title: "Inscription réussie",
+        duration: 8000,
+        actions: [
+          {
+            label: "Se connecter",
+            handler: "window.location.href = 'login.html'"
+          }
+        ]
+      });
+      
+      form.reset();
+      submitBtn.disabled = true;
+    });
+  </script>
+</body>
+</html>
+

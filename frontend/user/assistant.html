@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistant AI Universel - Espace Utilisateur</title>
+    <link rel="stylesheet" href="/css/user.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .chat-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            height: calc(100vh - 200px);
+            display: flex;
+            flex-direction: column;
+            background: var(--card-bg);
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .chat-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .chat-header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: var(--bg-color);
+        }
+
+        .message {
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+        }
+
+        .message-content {
+            flex: 1;
+            max-width: 70%;
+        }
+
+        .message-bubble {
+            padding: 1rem 1.25rem;
+            border-radius: 1rem;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border-bottom-right-radius: 0.25rem;
+        }
+
+        .message.assistant .message-bubble {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-bottom-left-radius: 0.25rem;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .message.assistant:hover .message-actions {
+            opacity: 1;
+        }
+
+        .feedback-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-secondary);
+        }
+
+        .feedback-btn:hover {
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .feedback-btn.active {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 0.5rem;
+        }
+
+        .message.user .message-time {
+            text-align: right;
+        }
+
+        .chat-input-container {
+            padding: 1rem;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            min-height: 50px;
+            max-height: 120px;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 1rem;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: none;
+            background: var(--bg-color);
+            color: var(--text-color);
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .send-button {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 1rem 1.25rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            border-bottom-left-radius: 0.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6366f1;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .quick-question {
+            padding: 0.5rem 1rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-color);
+        }
+
+        .quick-question:hover {
+            background: #6366f1;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .welcome-message i {
+            font-size: 3rem;
+            color: #6366f1;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        /* Code highlighting */
+        .message-bubble pre {
+            background: var(--bg-color);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 0.5rem 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .message-bubble code {
+            background: var(--bg-color);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .chat-container {
+                height: calc(100vh - 150px);
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .quick-questions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-flask"></i>
+                <span>Calculs Chimiques</span>
+            </div>
+            <div class="nav-menu">
+                <a href="/user/dashboard.html" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    Tableau de bord
+                </a>
+                <a href="/user/absorption.html" class="nav-link">
+                    <i class="fas fa-arrow-down"></i>
+                    Absorption
+                </a>
+                <a href="/user/desorption.html" class="nav-link">
+                    <i class="fas fa-arrow-up"></i>
+                    Désorption
+                </a>
+                <a href="/user/assistant.html" class="nav-link active">
+                    <i class="fas fa-robot"></i>
+                    Assistant AI
+                </a>
+                <a href="/user/profile.html" class="nav-link">
+                    <i class="fas fa-user"></i>
+                    Profil
+                </a>
+                <button id="theme-toggle" class="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button id="logout-btn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Déconnexion
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="chat-container">
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <h2>
+                        <i class="fas fa-robot"></i>
+                        Assistant AI Spécialisé
+                    </h2>
+                    <p>Posez-moi vos questions sur l'absorption, la désorption et les calculs chimiques !</p>
+                </div>
+
+                <!-- Chat Messages -->
+                <div class="chat-messages" id="chat-messages">
+                    <div class="welcome-message" id="welcome-message">
+                        <i class="fas fa-robot"></i>
+                        <h3>Bonjour ! Je suis votre assistant spécialisé en calculs chimiques</h3>
+                        <p>Je peux vous aider avec :</p>
+                        <ul style="text-align: left; max-width: 500px; margin: 1rem auto;">
+                            <li>• <strong>Calculs d'absorption</strong> (étages théoriques, débits, efficacité)</li>
+                            <li>• <strong>Calculs de désorption</strong> (stripping, régénération de solvants)</li>
+                            <li>• <strong>Diagrammes McCabe-Thiele</strong> (interprétation, construction)</li>
+                            <li>• <strong>Optimisation des procédés</strong> (facteurs A et S, paramètres)</li>
+                            <li>• <strong>Utilisation du site</strong> (export Excel, historique, simulations)</li>
+                            <li>• <strong>Interprétation des résultats</strong> (taux, rendement, performances)</li>
+                        </ul>
+                        
+                        <div class="quick-questions">
+                            <div class="quick-question" onclick="sendQuickQuestion('Comment calculer le nombre d\'étages théoriques ?')">
+                                Comment calculer le nombre d'étages théoriques ?
+                            </div>
+                            <div class="quick-question" onclick="sendQuickQuestion('Qu\'est-ce que le diagramme McCabe-Thiele ?')">
+                                Qu'est-ce que le diagramme McCabe-Thiele ?
+                            </div>
+                            <div class="quick-question" onclick="sendQuickQuestion('Quelle est la différence entre absorption et désorption ?')">
+                                Différence absorption/désorption ?
+                            </div>
+                            <div class="quick-question" onclick="sendQuickQuestion('Comment optimiser mon procédé d\'absorption ?')">
+                                Comment optimiser mon procédé d'absorption ?
+                            </div>
+                            <div class="quick-question" onclick="sendQuickQuestion('Comment exporter mes résultats en Excel ?')">
+                                Comment exporter mes résultats en Excel ?
+                            </div>
+                            <div class="quick-question" onclick="sendQuickQuestion('Qu\'est-ce que le facteur d\'absorption A ?')">
+                                Qu'est-ce que le facteur d'absorption A ?
+                            </div>
+                            <div class="quick-question" onclick="sendQuickQuestion('Comment interpréter les résultats de simulation ?')">
+                                Comment interpréter les résultats ?
+                            </div>
+                            <div class="quick-question" onclick="sendQuickQuestion('Quelle est la formule du nombre d\'étages ?')">
+                                Quelle est la formule du nombre d'étages ?
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Typing indicator -->
+                    <div class="message assistant" id="typing-indicator">
+                        <div class="message-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            <div class="typing-indicator">
+                                <div class="typing-dots">
+                                    <div class="typing-dot"></div>
+                                    <div class="typing-dot"></div>
+                                    <div class="typing-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <textarea 
+                            id="chat-input" 
+                            class="chat-input" 
+                            placeholder="Posez-moi n'importe quelle question ! Sciences, technologie, culture, vie quotidienne..."
+                            rows="1"
+                        ></textarea>
+                        <button id="send-button" class="send-button">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/theme.js"></script>
+    <script src="/js/notifications.js"></script>
+    <script>
+        let conversationHistory = [];
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            initializeChat();
+        });
+
+        function checkAuth() {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = '/user/login.html';
+                return;
+            }
+        }
+
+        function initializeChat() {
+            const chatInput = document.getElementById('chat-input');
+            const sendButton = document.getElementById('send-button');
+            const logoutBtn = document.getElementById('logout-btn');
+
+            // Auto-resize textarea
+            chatInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+
+            // Send message on Enter (but not Shift+Enter)
+            chatInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Send button click
+            sendButton.addEventListener('click', sendMessage);
+
+            // Logout
+            logoutBtn.addEventListener('click', function() {
+                localStorage.removeItem('access_token');
+                window.location.href = '/user/login.html';
+            });
+        }
+
+        function sendQuickQuestion(question) {
+            document.getElementById('chat-input').value = question;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const chatInput = document.getElementById('chat-input');
+            const sendButton = document.getElementById('send-button');
+            const message = chatInput.value.trim();
+
+            if (!message) return;
+
+            // Hide welcome message
+            const welcomeMessage = document.getElementById('welcome-message');
+            if (welcomeMessage) {
+                welcomeMessage.style.display = 'none';
+            }
+
+            // Disable input
+            chatInput.disabled = true;
+            sendButton.disabled = true;
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+
+            // Add user message
+            addMessage('user', message);
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            try {
+                // Send to AI assistant API
+                const response = await fetch('http://127.0.0.1:5000/api/assistant/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        conversation_history: conversationHistory
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Add assistant response
+                    addMessage('assistant', result.response);
+                    
+                    // Update conversation history
+                    conversationHistory.push({
+                        role: 'user',
+                        content: message
+                    });
+                    conversationHistory.push({
+                        role: 'assistant',
+                        content: result.response
+                    });
+
+                    // Keep only last 10 exchanges
+                    if (conversationHistory.length > 20) {
+                        conversationHistory = conversationHistory.slice(-20);
+                    }
+                } else {
+                    addMessage('assistant', 'Désolé, je rencontre une erreur technique. Veuillez réessayer dans quelques instants.');
+                }
+            } catch (error) {
+                console.error('Erreur lors de l\'envoi du message:', error);
+                addMessage('assistant', 'Désolé, je ne peux pas répondre pour le moment. Vérifiez votre connexion internet.');
+            } finally {
+                // Hide typing indicator
+                hideTypingIndicator();
+                
+                // Re-enable input
+                chatInput.disabled = false;
+                sendButton.disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        function addMessage(sender, content) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+
+            const avatar = sender === 'user' ? 
+                '<i class="fas fa-user"></i>' : 
+                '<i class="fas fa-robot"></i>';
+
+            const time = new Date().toLocaleTimeString('fr-FR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+
+            // Format content (basic markdown support)
+            const formattedContent = formatMessage(content);
+
+            // Generate unique message ID for feedback
+            const messageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+            const feedbackButtons = sender === 'assistant' ? `
+                <div class="message-actions">
+                    <button class="feedback-btn" onclick="giveFeedback('${messageId}', 'helpful')" title="Utile">
+                        <i class="fas fa-thumbs-up"></i>
+                    </button>
+                    <button class="feedback-btn" onclick="giveFeedback('${messageId}', 'not-helpful')" title="Pas utile">
+                        <i class="fas fa-thumbs-down"></i>
+                    </button>
+                    <button class="feedback-btn" onclick="copyMessage('${messageId}')" title="Copier">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            ` : '';
+
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">
+                    <div class="message-bubble" id="${messageId}">${formattedContent}</div>
+                    <div class="message-time">${time}</div>
+                    ${feedbackButtons}
+                </div>
+            `;
+
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function giveFeedback(messageId, type) {
+            const button = event.target.closest('.feedback-btn');
+            
+            // Visual feedback
+            button.classList.add('active');
+            setTimeout(() => button.classList.remove('active'), 1000);
+
+            // Send feedback to server
+            fetch('http://127.0.0.1:5000/api/assistant/feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify({
+                    response_id: messageId,
+                    rating: type === 'helpful' ? 5 : 2,
+                    message: type
+                })
+            }).catch(error => {
+                console.error('Erreur lors de l\'envoi du feedback:', error);
+            });
+
+            // Show thank you message
+            if (typeof notifications !== 'undefined') {
+                notifications.success('Merci pour votre feedback !');
+            }
+        }
+
+        function copyMessage(messageId) {
+            const messageElement = document.getElementById(messageId);
+            const text = messageElement.textContent || messageElement.innerText;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                if (typeof notifications !== 'undefined') {
+                    notifications.success('Message copié !');
+                }
+            }).catch(err => {
+                console.error('Erreur lors de la copie:', err);
+            });
+        }
+
+        function formatMessage(content) {
+            // Basic markdown formatting
+            return content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code>$1</code>')
+                .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function showTypingIndicator() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            const typingDiv = typingIndicator.querySelector('.typing-indicator');
+            typingDiv.style.display = 'block';
+            
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            const typingDiv = typingIndicator.querySelector('.typing-indicator');
+            typingDiv.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

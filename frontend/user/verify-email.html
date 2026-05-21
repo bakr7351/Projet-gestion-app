@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vérification email — Absorption</title>
+  <link rel="stylesheet" href="/css/auth.css" />
+</head>
+<body>
+  <div class="auth-layout">
+    <div class="auth-brand-panel">
+      <div class="logo">✅</div>
+      <h1>Vérification</h1>
+      <p>Activation de votre compte en cours...</p>
+    </div>
+
+    <div class="auth-form-panel">
+      <h2 id="statusTitle">Vérification en cours...</h2>
+      <p class="subtitle" id="statusMsg">Veuillez patienter pendant que nous activons votre compte.</p>
+
+      <div id="alert" class="alert"></div>
+
+      <div id="loadingSpinner" style="text-align:center;margin:2rem 0">
+        <div style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto"></div>
+      </div>
+
+      <div id="successActions" style="display:none">
+        <a href="/user/login.html" class="btn-submit" style="text-decoration:none;margin-top:1rem">
+          Se connecter maintenant
+        </a>
+      </div>
+
+      <div id="errorActions" style="display:none">
+        <button class="btn-submit" id="resendBtn" style="margin-top:1rem">
+          Renvoyer l'email de vérification
+        </button>
+        <p class="auth-footer">
+          <a href="/user/login.html">← Retour à la connexion</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/theme.js"></script>
+  <script src="/js/particles.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/utils.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    
+    const statusTitle = document.getElementById("statusTitle");
+    const statusMsg = document.getElementById("statusMsg");
+    const alertEl = document.getElementById("alert");
+    const loadingSpinner = document.getElementById("loadingSpinner");
+    const successActions = document.getElementById("successActions");
+    const errorActions = document.getElementById("errorActions");
+
+    async function verifyEmail() {
+      if (!token) {
+        showError("Lien invalide", "Ce lien de vérification est invalide ou a expiré.");
+        return;
+      }
+
+      try {
+        const res = await Auth.verifyEmail(token);
+        
+        if (res && res.ok) {
+          showSuccess("Compte activé !", "Votre compte a été activé avec succès. Vous pouvez maintenant vous connecter.");
+        } else {
+          showError("Erreur de vérification", res?.data?.message || "Ce lien est invalide ou a expiré.");
+        }
+      } catch (error) {
+        showError("Erreur réseau", "Impossible de vérifier votre email. Veuillez réessayer.");
+      }
+    }
+
+    function showSuccess(title, message) {
+      loadingSpinner.style.display = "none";
+      statusTitle.textContent = title;
+      statusMsg.textContent = message;
+      successActions.style.display = "block";
+      showAlert(alertEl, message, "success");
+    }
+
+    function showError(title, message) {
+      loadingSpinner.style.display = "none";
+      statusTitle.textContent = title;
+      statusMsg.textContent = message;
+      errorActions.style.display = "block";
+      showAlert(alertEl, message, "error");
+    }
+
+    document.getElementById("resendBtn").addEventListener("click", async () => {
+      const email = prompt("Entrez votre adresse email pour recevoir un nouveau lien :");
+      if (!email) return;
+      
+      const res = await Auth.resendVerification(email);
+      if (res && res.ok) {
+        showAlert(alertEl, "Email de vérification renvoyé.", "success");
+      } else {
+        showAlert(alertEl, "Erreur lors de l'envoi.", "error");
+      }
+    });
+
+    // Start verification
+    verifyEmail();
+  </script>
+</body>
+</html>
