@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Surveillance IP — Admin</title>
+  <link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <a href="dashboard.html" class="logo">🔬 Absorption</a>
+      <span class="admin-tag">Administration</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="users.html"><span class="nav-icon">👥</span> Utilisateurs</a>
+      <a href="audit.html"><span class="nav-icon">📋</span> Historique</a>
+      <a href="archive.html"><span class="nav-icon">🗄️</span> Archive</a>
+      <a href="ip.html" class="active"><span class="nav-icon">🛡️</span> Surveillance IP</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar">A</div>
+        <div class="user-info"><div class="name">Admin</div><div class="role">Administrateur</div></div>
+      </div>
+      <button class="btn-logout" id="logoutBtn">Déconnexion</button>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="topbar">
+      <h1>Surveillance des IPs</h1>
+      <div class="topbar-right"><button class="theme-toggle-inline" onclick="toggleTheme()" title="Changer le th�me">??</button><span class="badge-admin-tag">Admin</span></div>
+    </div>
+
+    <div class="main-content">
+      <div class="page-header">
+        <p>Adresses IP suspectes (plus de 3 inscriptions en 24h).</p>
+      </div>
+
+      <div id="alert" class="alert"></div>
+
+      <div class="card" style="max-width:480px">
+        <h2 style="margin-bottom:1rem;font-size:1rem">Bannir une IP manuellement</h2>
+        <div style="display:flex;gap:.6rem">
+          <input type="text" id="ipInput" placeholder="192.168.1.1"
+            style="flex:1;padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;background:var(--bg)" />
+          <button class="btn btn-danger" id="banBtn">Bannir</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>IPs suspectes</h2>
+          <button class="btn btn-outline btn-sm" id="refreshBtn">↻ Actualiser</button>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Adresse IP</th><th>Inscriptions (24h)</th><th>Action</th></tr>
+            </thead>
+            <tbody id="ipBody">
+              <tr><td colspan="3" style="color:var(--muted);text-align:center;padding:2rem">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/theme.js"></script><script src="/js/api.js"></script>
+  <script src="/js/utils.js"></script>
+  <script>
+    requireAdmin("../user/login.html");
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      clearToken();
+      window.location.href = "/user/login.html";
+    });
+
+    const alertEl = document.getElementById("alert");
+
+    async function loadIPs() {
+      const res = await AdminAPI.ipRecords();
+      const tbody = document.getElementById("ipBody");
+      if (!res || !res.ok) { tbody.innerHTML = `<tr><td colspan="3" style="color:var(--danger)">Erreur</td></tr>`; return; }
+      const ips = res.data.suspicious_ips;
+      if (!ips.length) { tbody.innerHTML = `<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:2rem">Aucune IP suspecte détectée</td></tr>`; return; }
+      tbody.innerHTML = ips.map(r => `
+        <tr>
+          <td><code>${r.ip}</code></td>
+          <td>${r.count}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="banIP('${r.ip}')">Bannir</button></td>
+        </tr>
+      `).join("");
+    }
+
+    async function banIP(ip) {
+      if (!confirm(`Bannir l'IP ${ip} et tous les comptes associés ?`)) return;
+      const res = await AdminAPI.banIP(ip);
+      showAlert(alertEl, res?.data?.message || "IP bannie", res?.ok ? "success" : "error");
+      loadIPs();
+    }
+
+    document.getElementById("banBtn").addEventListener("click", () => {
+      const ip = document.getElementById("ipInput").value.trim();
+      if (!ip) return;
+      banIP(ip);
+    });
+
+    document.getElementById("refreshBtn").addEventListener("click", loadIPs);
+    loadIPs();
+  </script>
+</body>
+</html>
+
+

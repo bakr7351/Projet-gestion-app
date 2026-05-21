@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Archive — Admin</title>
+  <link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <a href="dashboard.html" class="logo">🔬 Absorption</a>
+      <span class="admin-tag">Administration</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="users.html"><span class="nav-icon">👥</span> Utilisateurs</a>
+      <a href="audit.html"><span class="nav-icon">📋</span> Historique</a>
+      <a href="archive.html" class="active"><span class="nav-icon">🗄️</span> Archive</a>
+      <a href="ip.html"><span class="nav-icon">🛡️</span> Surveillance IP</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar">A</div>
+        <div class="user-info"><div class="name">Admin</div><div class="role">Administrateur</div></div>
+      </div>
+      <button class="btn-logout" id="logoutBtn">Déconnexion</button>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="topbar">
+      <h1>Archive</h1>
+      <div class="topbar-right"><button class="theme-toggle-inline" onclick="toggleTheme()" title="Changer le th�me">??</button><span class="badge-admin-tag">Admin</span></div>
+    </div>
+
+    <div class="main-content">
+      <div class="page-header">
+        <p>Comptes supprimés conservés pour consultation.</p>
+      </div>
+
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>ID original</th><th>Nom</th><th>Email</th><th>Supprimé par</th><th>Date</th></tr>
+            </thead>
+            <tbody id="archiveBody">
+              <tr><td colspan="5" style="color:var(--muted);text-align:center;padding:2rem">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/theme.js"></script><script src="/js/api.js"></script>
+  <script src="/js/utils.js"></script>
+  <script>
+    requireAdmin("../user/login.html");
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      clearToken();
+      window.location.href = "/user/login.html";
+    });
+
+    async function loadArchive() {
+      const res = await AdminAPI.archive();
+      const tbody = document.getElementById("archiveBody");
+      if (!res || !res.ok) { tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger)">Erreur</td></tr>`; return; }
+      const items = res.data.archive;
+      if (!items.length) { tbody.innerHTML = `<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:2rem">Aucun compte archivé</td></tr>`; return; }
+      tbody.innerHTML = items.map(a => {
+        let snap = {};
+        try { snap = JSON.parse(a.data_snapshot); } catch {}
+        return `
+          <tr>
+            <td><code>#${a.original_id}</code></td>
+            <td>${snap.nom || "—"} ${snap.prenom || ""}</td>
+            <td>${snap.email || "—"}</td>
+            <td>#${a.deleted_by}</td>
+            <td>${formatDate(a.deleted_at)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    loadArchive();
+  </script>
+</body>
+</html>
+
+
