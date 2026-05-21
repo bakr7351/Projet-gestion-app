@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Utilisateurs — Admin</title>
+  <link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <a href="dashboard.html" class="logo">🔬 Absorption</a>
+      <span class="admin-tag">Administration</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="users.html" class="active"><span class="nav-icon">👥</span> Utilisateurs</a>
+      <a href="audit.html"><span class="nav-icon">📋</span> Historique</a>
+      <a href="archive.html"><span class="nav-icon">🗄️</span> Archive</a>
+      <a href="ip.html"><span class="nav-icon">🛡️</span> Surveillance IP</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar">A</div>
+        <div class="user-info"><div class="name">Admin</div><div class="role">Administrateur</div></div>
+      </div>
+      <button class="btn-logout" id="logoutBtn">Déconnexion</button>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="topbar">
+      <h1>Gestion des utilisateurs</h1>
+      <div class="topbar-right">
+        <div id="exportContainer"></div>
+        <button class="theme-toggle-inline" onclick="toggleTheme()" title="Changer le thème">🌙</button>
+        <span class="badge-admin-tag">Admin</span>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <nav class="breadcrumbs">
+        <a href="dashboard.html">🏠 Dashboard</a>
+        <span class="sep">›</span>
+        <span class="current">Utilisateurs</span>
+      </nav>
+      <!-- Advanced Filters -->
+      <div id="filtersContainer"></div>
+
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--border);">
+          <h3 style="margin: 0; color: var(--text);">Liste des utilisateurs</h3>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <button class="btn btn-outline btn-sm" onclick="refreshUsers()" title="Actualiser">
+              🔄 Actualiser
+            </button>
+          </div>
+        </div>
+        
+        <div class="table-wrapper" style="position: relative;">
+          <table>
+            <thead>
+              <tr>
+                <th>Utilisateur</th>
+                <th>Email</th>
+                <th>Rôle</th>
+                <th>Statut</th>
+                <th>Inscrit le</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody">
+              <!-- Loading skeleton will be inserted here -->
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div id="paginationContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Include all new JS modules -->
+  <script src="/js/theme.js"></script>
+  <script src="/js/notifications.js"></script>
+  <script src="/js/loading.js"></script>
+  <script src="/js/modals.js"></script>
+  <script src="/js/pagination.js"></script>
+  <script src="/js/filters.js"></script>
+  <script src="/js/export.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/utils.js"></script>
+  
+  <script>
+    requireAdmin("../user/login.html");
+
+    // Global state
+    let currentUsers = [];
+    let filteredUsers = [];
+    let currentFilters = {};
+    let currentPage = 1;
+    let pageSize = 10;
+
+    // Initialize components
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeFilters();
+      initializePagination();
+      initializeExport();
+      loadUsers();
+    });
+
+    // Logout handler
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      const confirmed = await modals.confirm(
+        "Êtes-vous sûr de vouloir vous déconnecter ?",
+        "Déconnexion"
+      );
+      if (confirmed) {
+        clearToken();
+        window.location.href = "/user/login.html";
+      }
+    });
+
+    // Initialize advanced filters
+    function initializeFilters() {
+      filters.create('filtersContainer', {
+        searchPlaceholder: 'Rechercher par nom, prénom ou email...',
+        filters: [
+          {
+            type: 'select',
+            key: 'statut',
+            label: 'Statut',
+            options: [
+              { value: 'actif', label: 'Actif' },
+              { value: 'desactive', label: 'Désactivé' },
+              { value: 'banni', label: 'Banni' },
+              { value: 'en_attente', label: 'En attente' }
+            ]
+          },
+          {
+            type: 'select',
+            key: 'role',
+            label: 'Rôle',
+            options: [
+              { value: 'user', label: 'Utilisateur' },
+              { value: 'admin', label: 'Administrateur' }
+            ]
+          },
+          {
+            type: 'date',
+            key: 'date_from',
+            label: 'Inscrit après'
+          },
+          {
+            type: 'date',
+            key: 'date_to',
+            label: 'Inscrit avant'
+          }
+        ],
+        onFilterChange: (newFilters) => {
+          currentFilters = newFilters;
+          currentPage = 1;
+          applyFiltersAndPagination();
+        }
+      });
+    }
+
+    // Initialize pagination
+    function initializePagination() {
+      pagination.create('paginationContainer', {
+        pageSize: pageSize,
+        pageSizeOptions: [5, 10, 25, 50, 100],
+        onPageChange: (page, size) => {
+          currentPage = page;
+          pageSize = size;
+          renderCurrentPage();
+        },
+        onPageSizeChange: (page, size) => {
+          currentPage = page;
+          pageSize = size;
+          applyFiltersAndPagination();
+        }
+      });
+    }
+
+    // Initialize export functionality
+    function initializeExport() {
+      const container = document.getElementById('exportContainer');
+      if (!container) return;
+
+      container.innerHTML = `
+        <div class="export-dropdown" id="exportDropdown" style="position:relative;display:inline-block;">
+          <button class="btn btn-primary btn-sm" onclick="toggleExportMenu()" style="display:flex;align-items:center;gap:6px;">
+            📊 Exporter <span style="font-size:10px;">▼</span>
+          </button>
+          <div id="exportMenu" style="
+            display:none;
+            position:absolute;
+            top:110%;
+            right:0;
+            background:#ffffff;
+            border:1px solid #e2e8f0;
+            border-radius:8px;
+            box-shadow:0 8px 24px rgba(0,0,0,0.15);
+            min-width:200px;
+            z-index:9999;
+            overflow:hidden;
+          ">
+            <div onclick="downloadExport('excel')" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e2e8f0;transition:background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">
+              <span>📊</span>
+              <div>
+                <div style="font-weight:600;font-size:14px;color:#1e293b;">Excel (.xlsx)</div>
+                <div style="font-size:12px;color:#64748b;">Fichier Excel natif</div>
+              </div>
+            </div>
+            <div onclick="downloadExport('csv')" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">
+              <span>📄</span>
+              <div>
+                <div style="font-weight:600;font-size:14px;color:#1e293b;">CSV</div>
+                <div style="font-size:12px;color:#64748b;">Compatible Excel, Google Sheets</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#exportDropdown')) {
+          document.getElementById('exportMenu').style.display = 'none';
+        }
+      });
+    }
+
+    function toggleExportMenu() {
+      const menu = document.getElementById('exportMenu');
+      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function downloadExport(format) {
+      document.getElementById('exportMenu').style.display = 'none';
+
+      const token = getToken();
+      notifications.info(`Préparation de l'export ${format.toUpperCase()}...`);
+
+      try {
+        const res = await fetch(`/api/admin/export/${format}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          notifications.error("Erreur lors de l'export");
+          return;
+        }
+
+        const blob = await res.blob();
+        const url  = window.URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+
+        // Get filename from Content-Disposition header
+        const disposition = res.headers.get('Content-Disposition');
+        const match = disposition && disposition.match(/filename="?([^"]+)"?/);
+        a.download = match ? match[1] : `utilisateurs.${format === 'excel' ? 'xlsx' : 'csv'}`;
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        notifications.success(`Export ${format.toUpperCase()} téléchargé avec succès !`);
+      } catch (err) {
+        notifications.error("Erreur de connexion lors de l'export");
+      }
+    }
+
+    // Load users from API
+    async function loadUsers() {
+      // Show loading skeleton
+      loading.createUserListSkeleton(document.getElementById('usersBody'), 8);
+      
+      try {
+        const res = await AdminAPI.listUsers();
+        if (!res || !res.ok) {
+          notifications.error("Erreur lors du chargement des utilisateurs");
+          return;
+        }
+        
+        currentUsers = res.data.users || [];
+        applyFiltersAndPagination();
+        
+      } catch (error) {
+        notifications.error("Erreur de connexion lors du chargement");
+      }
+    }
+
+    // Apply filters and update pagination
+    function applyFiltersAndPagination() {
+      // Apply filters
+      filteredUsers = currentUsers.filter(user => {
+        // Search filter
+        if (currentFilters.search) {
+          const searchTerm = currentFilters.search.toLowerCase();
+          const searchableText = `${user.nom} ${user.prenom} ${user.email}`.toLowerCase();
+          if (!searchableText.includes(searchTerm)) {
+            return false;
+          }
+        }
+
+        // Status filter
+        if (currentFilters.statut && user.statut !== currentFilters.statut) {
+          return false;
+        }
+
+        // Role filter
+        if (currentFilters.role && user.role !== currentFilters.role) {
+          return false;
+        }
+
+        // Date filters
+        if (currentFilters.date_from) {
+          const userDate = new Date(user.created_at);
+          const fromDate = new Date(currentFilters.date_from);
+          if (userDate < fromDate) {
+            return false;
+          }
+        }
+
+        if (currentFilters.date_to) {
+          const userDate = new Date(user.created_at);
+          const toDate = new Date(currentFilters.date_to);
+          toDate.setHours(23, 59, 59, 999); // End of day
+          if (userDate > toDate) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
+      // Update filters results count
+      filters.updateResultsCount('filtersContainer', filteredUsers.length);
+
+      // Update pagination
+      pagination.update('paginationContainer', filteredUsers.length, currentPage);
+
+      // Render current page
+      renderCurrentPage();
+    }
+
+    // Render current page of users
+    function renderCurrentPage() {
+      const startIndex = (currentPage - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const pageUsers = filteredUsers.slice(startIndex, endIndex);
+      
+      renderUsers(pageUsers);
+    }
+
+    // Render users table
+    function renderUsers(users) {
+      const tbody = document.getElementById("usersBody");
+      
+      if (!users.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" style="color:var(--muted);text-align:center;padding:3rem">
+              <div style="font-size: 48px; margin-bottom: 16px;">👥</div>
+              <div style="font-size: 18px; margin-bottom: 8px;">Aucun utilisateur trouvé</div>
+              <div style="font-size: 14px;">Essayez de modifier vos filtres de recherche</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = users.map(u => `
+        <tr class="fade-in">
+          <td>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                ${(u.prenom?.[0] || '').toUpperCase()}${(u.nom?.[0] || '').toUpperCase()}
+              </div>
+              <div>
+                <div style="font-weight: 600; color: var(--text);">${u.nom} ${u.prenom}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">ID: ${u.id}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div style="color: var(--text);">${u.email}</div>
+            ${u.email_verified ? 
+              '<div style="font-size: 12px; color: var(--success);">✓ Vérifié</div>' : 
+              '<div style="font-size: 12px; color: var(--warning);">⚠ Non vérifié</div>'
+            }
+          </td>
+          <td>${roleBadge(u.role)}</td>
+          <td>${statusBadge(u.statut)}</td>
+          <td>
+            <div style="color: var(--text);">${formatDate(u.created_at)}</div>
+            ${u.last_login ? 
+              `<div style="font-size: 12px; color: var(--text-muted);">Dernière connexion: ${formatDate(u.last_login)}</div>` : 
+              '<div style="font-size: 12px; color: var(--text-muted);">Jamais connecté</div>'
+            }
+          </td>
+          <td>
+            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+              ${u.statut !== "actif" ? `
+                <button class="btn btn-success btn-sm" onclick="setStatus(${u.id},'actif')" title="Activer le compte">
+                  ✓
+                </button>
+              ` : ""}
+              ${u.statut !== "desactive" ? `
+                <button class="btn btn-warning btn-sm" onclick="setStatus(${u.id},'desactive')" title="Désactiver le compte">
+                  ⏸
+                </button>
+              ` : ""}
+              ${u.statut !== "banni" ? `
+                <button class="btn btn-danger btn-sm" onclick="setStatus(${u.id},'banni')" title="Bannir le compte">
+                  🚫
+                </button>
+              ` : ""}
+              ${u.role !== "admin" ? `
+                <button class="btn btn-outline btn-sm" onclick="promote(${u.id})" title="Promouvoir en admin">
+                  👑
+                </button>
+              ` : ""}
+              <button class="btn btn-outline btn-sm" onclick="openNotify(${u.id})" title="Envoyer une notification">
+                ✉️
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})" title="Supprimer le compte">
+                🗑️
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    // Refresh users
+    async function refreshUsers() {
+      notifications.info("Actualisation en cours...");
+      await loadUsers();
+      notifications.success("Liste des utilisateurs actualisée");
+    }
+
+    // Set user status
+    async function setStatus(id, statut) {
+      const statusLabels = {
+        'actif': 'activer',
+        'desactive': 'désactiver', 
+        'banni': 'bannir'
+      };
+      
+      const confirmed = await modals.confirm(
+        `Êtes-vous sûr de vouloir ${statusLabels[statut]} ce compte ?`,
+        'Modification du statut'
+      );
+      
+      if (!confirmed) return;
+
+      const loadingId = loading.showLoading(document.querySelector('.table-wrapper'));
+      
+      try {
+        const res = await AdminAPI.updateStatus(id, statut);
+        
+        if (res && res.ok) {
+          notifications.success(`Compte ${statusLabels[statut]} avec succès`);
+          await loadUsers(); // Reload to get fresh data
+        } else {
+          notifications.error(res?.data?.message || "Erreur lors de la modification");
+        }
+      } catch (error) {
+        notifications.error("Erreur de connexion");
+      } finally {
+        loading.hideLoading(loadingId);
+      }
+    }
+
+    // Promote user to admin
+    async function promote(id) {
+      const confirmed = await modals.confirm(
+        "Êtes-vous sûr de vouloir promouvoir cet utilisateur en administrateur ? Cette action lui donnera accès à toutes les fonctions d'administration.",
+        'Promotion en administrateur'
+      );
+      
+      if (!confirmed) return;
+
+      const loadingId = loading.showLoading(document.querySelector('.table-wrapper'));
+      
+      try {
+        const res = await AdminAPI.promote(id);
+        
+        if (res && res.ok) {
+          notifications.success("Utilisateur promu en administrateur");
+          await loadUsers();
+        } else {
+          notifications.error(res?.data?.message || "Erreur lors de la promotion");
+        }
+      } catch (error) {
+        notifications.error("Erreur de connexion");
+      } finally {
+        loading.hideLoading(loadingId);
+      }
+    }
+
+    // Delete user
+    async function deleteUser(id) {
+      const confirmed = await modals.confirmDelete("ce compte utilisateur");
+      if (!confirmed) return;
+
+      const loadingId = loading.showLoading(document.querySelector('.table-wrapper'));
+      
+      try {
+        const res = await AdminAPI.deleteUser(id);
+        
+        if (res && res.ok) {
+          notifications.success("Compte supprimé et archivé");
+          await loadUsers();
+        } else {
+          notifications.error(res?.data?.message || "Erreur lors de la suppression");
+        }
+      } catch (error) {
+        notifications.error("Erreur de connexion");
+      } finally {
+        loading.hideLoading(loadingId);
+      }
+    }
+
+    // Send notification to user
+    async function openNotify(id) {
+      const message = await modals.prompt(
+        "Entrez le message à envoyer à cet utilisateur :",
+        "Envoyer une notification"
+      );
+      
+      if (!message) return;
+
+      const loadingId = loading.showLoading(document.querySelector('.table-wrapper'));
+      
+      try {
+        const res = await AdminAPI.notify(id, message);
+        
+        if (res && res.ok) {
+          notifications.success("Notification envoyée avec succès");
+        } else {
+          notifications.error(res?.data?.message || "Erreur lors de l'envoi");
+        }
+      } catch (error) {
+        notifications.error("Erreur de connexion");
+      } finally {
+        loading.hideLoading(loadingId);
+      }
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Ctrl+K for search focus
+      if (e.ctrlKey && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.querySelector('.filter-input[type="text"]');
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+      
+      // Ctrl+R for refresh
+      if (e.ctrlKey && e.key === 'r') {
+        e.preventDefault();
+        refreshUsers();
+      }
+    });
+  </script>
+</body>
+</html>
+
+

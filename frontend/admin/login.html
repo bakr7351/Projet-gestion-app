@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AdminOS — Connexion</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #111318;
+      --surface2:  #161920;
+      --surface3:  #1e2230;
+      --border:    #252b3a;
+      --border2:   #2e3650;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --accent:    #00ff87;
+      --accent-dim:#00c968;
+      --danger:    #ff4455;
+      --info:      #38bdf8;
+      --font-h:    'Syne', sans-serif;
+      --font-m:    'DM Mono', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-h);
+      overflow: hidden;
+    }
+
+    /* ── BACKGROUND GRID ── */
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(0,255,135,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,135,.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    }
+
+    /* ── GLOW BLOBS ── */
+    .blob {
+      position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none;
+    }
+    .blob-1 {
+      width: 420px; height: 420px; top: -120px; left: -80px;
+      background: radial-gradient(circle, rgba(0,255,135,.12), transparent 70%);
+      animation: drift 8s ease-in-out infinite alternate;
+    }
+    .blob-2 {
+      width: 320px; height: 320px; bottom: -80px; right: -60px;
+      background: radial-gradient(circle, rgba(56,189,248,.1), transparent 70%);
+      animation: drift 10s ease-in-out infinite alternate-reverse;
+    }
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(30px, 20px) scale(1.1); }
+    }
+
+    /* ── LAYOUT ── */
+    .wrapper {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* LEFT PANEL */
+    .panel-left {
+      width: 45%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px;
+      border-right: 1px solid var(--border);
+      position: relative;
+    }
+
+    .logo-block {
+      position: absolute; top: 40px; left: 60px;
+      display: flex; align-items: center; gap: 10px;
+      animation: fadeUp .6s ease both;
+    }
+    .logo-hex { font-size: 24px; color: var(--accent); filter: drop-shadow(0 0 10px var(--accent)); }
+    .logo-name { font-size: 20px; font-weight: 800; letter-spacing: .12em; }
+
+    .hero-text { animation: fadeUp .7s .1s ease both; }
+    .hero-label {
+      font-family: var(--font-m); font-size: 11px; font-weight: 500;
+      color: var(--accent); letter-spacing: .2em; text-transform: uppercase;
+      margin-bottom: 18px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .hero-label::before {
+      content: ''; display: inline-block;
+      width: 24px; height: 1px; background: var(--accent);
+    }
+    .hero-title {
+      font-size: 44px; font-weight: 800; line-height: 1.1;
+      letter-spacing: -.01em; margin-bottom: 16px;
+    }
+    .hero-title span { color: var(--accent); }
+    .hero-desc { font-size: 14px; color: var(--muted); line-height: 1.8; max-width: 340px; }
+
+    .stats-row {
+      display: flex; gap: 28px; margin-top: 48px;
+      animation: fadeUp .7s .2s ease both;
+    }
+    
+    .stat-mini-val { font-family: var(--font-m); font-size: 28px; font-weight: 500; color: var(--accent); }
+    .stat-mini-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .divider-v { width: 1px; background: var(--border); }
+
+    /* RIGHT PANEL — FORM */
+    .panel-right {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .form-card {
+      width: 100%; max-width: 400px;
+      animation: fadeUp .7s .15s ease both;
+    }
+
+    .form-title { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+    .form-sub {
+      font-size: 13px; color: var(--muted); margin-bottom: 36px;
+      font-family: var(--font-m);
+    }
+
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: block; font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .12em; color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .input-wrap {
+      position: relative; display: flex; align-items: center;
+    }
+    .input-icon {
+      position: absolute; left: 14px; font-size: 15px;
+      color: var(--muted); pointer-events: none;
+      transition: color .2s;
+    }
+    .field input {
+      width: 100%; padding: 12px 14px 12px 42px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text);
+      font-family: var(--font-m); font-size: 13px; outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,255,135,.1);
+    }
+    .field input:focus + .input-icon,
+    .input-wrap:focus-within .input-icon { color: var(--accent); }
+    .eye-btn {
+      position: absolute; right: 14px; background: none; border: none;
+      color: var(--muted); cursor: pointer; font-size: 16px;
+      transition: color .2s; padding: 0;
+    }
+    .eye-btn:hover { color: var(--text); }
+
+    .field-meta {
+      display: flex; justify-content: flex-end; margin-top: 6px;
+    }
+    .forgot-link {
+      font-size: 11px; color: var(--accent); text-decoration: none;
+      font-family: var(--font-m); transition: opacity .2s;
+    }
+    .forgot-link:hover { opacity: .7; }
+
+    /* CAPTCHA / ROLE BADGE */
+    .role-badge {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(0,255,135,.06); border: 1px solid rgba(0,255,135,.2);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 24px;
+    }
+    .role-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); flex-shrink: 0; }
+    .role-text { font-family: var(--font-m); font-size: 12px; color: var(--accent); }
+
+    /* ERROR MSG */
+    .error-msg {
+      display: none; align-items: center; gap: 8px;
+      background: rgba(255,68,85,.08); border: 1px solid rgba(255,68,85,.25);
+      border-radius: 8px; padding: 10px 14px; margin-bottom: 18px;
+      font-family: var(--font-m); font-size: 12px; color: var(--danger);
+    }
+    .error-msg.show { display: flex; }
+
+    /* SUBMIT */
+    .btn-login {
+      width: 100%; padding: 14px;
+      background: var(--accent); color: #000;
+      border: none; border-radius: 10px;
+      font-family: var(--font-h); font-size: 14px; font-weight: 800;
+      letter-spacing: .06em; cursor: pointer;
+      transition: background .2s, transform .15s, box-shadow .2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      position: relative; overflow: hidden;
+    }
+    .btn-login:hover {
+      background: var(--accent-dim);
+      box-shadow: 0 0 24px rgba(0,255,135,.3);
+      transform: translateY(-1px);
+    }
+    .btn-login:active { transform: translateY(0); }
+    .btn-login .arrow { transition: transform .2s; }
+    .btn-login:hover .arrow { transform: translateX(4px); }
+
+    /* LOADER */
+    .btn-login .loader {
+      display: none; width: 16px; height: 16px;
+      border: 2px solid rgba(0,0,0,.3); border-top-color: #000;
+      border-radius: 50%; animation: spin .6s linear infinite;
+    }
+    .btn-login.loading .loader { display: block; }
+    .btn-login.loading .btn-text, .btn-login.loading .arrow { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .signup-link {
+      text-align: center; margin-top: 22px;
+      font-size: 13px; color: var(--muted);
+    }
+    .signup-link a { color: var(--accent); text-decoration: none; font-weight: 700; }
+    .signup-link a:hover { text-decoration: underline; }
+
+    /* SECURITY LINE */
+    .security-line {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 28px; padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .security-line span { font-family: var(--font-m); font-size: 11px; color: var(--muted); }
+    .lock-icon { font-size: 13px; }
+
+    /* ANIM */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 860px) {
+      .panel-left { display: none; }
+      .panel-right { padding: 30px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<div class="wrapper">
+
+  <!-- LEFT PANEL -->
+  <div class="panel-left">
+    <div class="logo-block">
+      <span class="logo-hex">⬡</span>
+      <span class="logo-name">AdminOS</span>
+    </div>
+
+    <div class="hero-text">
+      <div class="hero-label">Espace Sécurisé</div>
+      <h1 class="hero-title">Panneau de<br/>contrôle <span>Admin</span></h1>
+      <p class="hero-desc">
+        Accédez à votre espace d'administration pour gérer les utilisateurs, surveiller les activités et maintenir la sécurité de la plateforme.
+      </p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-mini">
+        <div class="stat-mini-val">248</div>
+        <div class="stat-mini-lbl">Utilisateurs</div>
+      </div>
+      <div class="divider-v"></div>
+      <div class="stat-mini">
+        <div class="stat-mini-val">189</div>
+        <div class="stat-mini-lbl">Comptes actifs</div>
+      </div>
+      <div class="divider-v"></div>
+      <div class="stat-mini">
+        <div class="stat-mini-val">99.9%</div>
+        <div class="stat-mini-lbl">Disponibilité</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel-right">
+    <div class="form-card">
+
+      <div class="form-title">Connexion</div>
+      <div class="form-sub">// Accès réservé aux administrateurs</div>
+
+      <div class="role-badge">
+        <div class="role-dot"></div>
+        <span class="role-text">Session administrateur sécurisée</span>
+      </div>
+
+      <div class="error-msg" id="errorMsg">
+        <span>🔒</span>
+        <span id="errorText">Email ou mot de passe incorrect.</span>
+      </div>
+
+      <div class="field">
+        <label>Adresse Email</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉</span>
+          <input type="email" id="email" placeholder="admin@example.com" autocomplete="email"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Mot de passe</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔑</span>
+          <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"/>
+          <button class="eye-btn" type="button" onclick="togglePwd('password', this)" title="Voir/masquer">👁</button>
+        </div>
+        <div class="field-meta">
+          <a href="#" class="forgot-link">Mot de passe oublié ?</a>
+        </div>
+      </div>
+
+      <button class="btn-login" id="loginBtn" onclick="handleLogin()">
+        <div class="loader"></div>
+        <span class="btn-text">Se connecter</span>
+        <span class="arrow">→</span>
+      </button>
+
+      <div class="signup-link">
+        Pas encore de compte ? <a href="signup.html">Créer un compte</a>
+      </div>
+
+      <div class="security-line">
+        <span class="lock-icon">🛡</span>
+        <span>Connexion chiffrée · Enregistrement IP actif · Session sécurisée</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function togglePwd(id, btn) {
+    const input = document.getElementById(id);
+    if (input.type === 'password') {
+      input.type = 'text'; btn.textContent = '🙈';
+    } else {
+      input.type = 'password'; btn.textContent = '👁';
+    }
+  }
+
+  function handleLogin() {
+    const email = document.getElementById('email').value.trim();
+    const pwd   = document.getElementById('password').value;
+    const btn   = document.getElementById('loginBtn');
+    const err   = document.getElementById('errorMsg');
+
+    err.classList.remove('show');
+
+    if (!email || !pwd) {
+      document.getElementById('errorText').textContent = 'Veuillez remplir tous les champs.';
+      err.classList.add('show'); return;
+    }
+    if (!email.includes('@')) {
+      document.getElementById('errorText').textContent = 'Adresse email invalide.';
+      err.classList.add('show'); return;
+    }
+    if (pwd.length < 8) {
+      document.getElementById('errorText').textContent = 'Le mot de passe doit comporter au moins 8 caractères.';
+      err.classList.add('show'); return;
+    }
+
+    btn.classList.add('loading');
+
+    setTimeout(() => {
+      btn.classList.remove('loading');
+      // Simulation : redirection vers le dashboard
+      if (email === 'admin@example.com' && pwd === 'Admin1234') {
+        window.location.href = 'admin-dashboard.html';
+      } else {
+        document.getElementById('errorText').textContent = 'Email ou mot de passe incorrect.';
+        err.classList.add('show');
+        document.getElementById('password').value = '';
+      }
+    }, 1400);
+  }
+
+  // Connexion via touche Entrée
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleLogin();
+  });
+</script>
+</body>
+</html>

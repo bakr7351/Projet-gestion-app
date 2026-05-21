@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Historique — Admin</title>
+  <link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <a href="dashboard.html" class="logo">🔬 Absorption</a>
+      <span class="admin-tag">Administration</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="users.html"><span class="nav-icon">👥</span> Utilisateurs</a>
+      <a href="audit.html" class="active"><span class="nav-icon">📋</span> Historique</a>
+      <a href="archive.html"><span class="nav-icon">🗄️</span> Archive</a>
+      <a href="ip.html"><span class="nav-icon">🛡️</span> Surveillance IP</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar">A</div>
+        <div class="user-info"><div class="name">Admin</div><div class="role">Administrateur</div></div>
+      </div>
+      <button class="btn-logout" id="logoutBtn">Déconnexion</button>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="topbar">
+      <h1>Historique global</h1>
+      <div class="topbar-right"><button class="theme-toggle-inline" onclick="toggleTheme()" title="Changer le th�me">??</button><span class="badge-admin-tag">Admin</span></div>
+    </div>
+
+    <div class="main-content">
+      <div class="page-header">
+        <p>Toutes les actions importantes enregistrées sur la plateforme.</p>
+      </div>
+
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Action</th><th>Compte cible</th><th>Auteur</th><th>Date</th><th>Détails</th></tr>
+            </thead>
+            <tbody id="auditBody">
+              <tr><td colspan="5" style="color:var(--muted);text-align:center;padding:2rem">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/theme.js"></script><script src="/js/api.js"></script>
+  <script src="/js/utils.js"></script>
+  <script>
+    requireAdmin("../user/login.html");
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      clearToken();
+      window.location.href = "/user/login.html";
+    });
+
+    const ACTION_LABELS = {
+      creation: "Création", activation: "Activation", password_reset: "Reset MDP",
+      statut_actif: "Activé", statut_desactive: "Désactivé", statut_banni: "Banni",
+      promotion_admin: "Promu Admin", suppression: "Suppression", notification: "Notification",
+    };
+
+    async function loadAudit() {
+      const res = await AdminAPI.auditLog();
+      const tbody = document.getElementById("auditBody");
+      if (!res || !res.ok) { tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger)">Erreur</td></tr>`; return; }
+      const logs = res.data.logs;
+      if (!logs.length) { tbody.innerHTML = `<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:2rem">Aucune entrée</td></tr>`; return; }
+      tbody.innerHTML = logs.map(l => `
+        <tr>
+          <td>${ACTION_LABELS[l.action] || l.action}</td>
+          <td>#${l.target_id}</td>
+          <td>${l.author_id ? "#" + l.author_id : "Système"}</td>
+          <td>${formatDate(l.created_at)}</td>
+          <td>${l.details || "—"}</td>
+        </tr>
+      `).join("");
+    }
+
+    loadAudit();
+  </script>
+</body>
+</html>
+
+

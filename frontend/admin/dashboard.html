@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — Absorption</title>
+  <link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <a href="dashboard.html" class="logo">🔬 Absorption</a>
+      <span class="admin-tag">Administration</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="active"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="users.html"><span class="nav-icon">👥</span> Utilisateurs</a>
+      <a href="audit.html"><span class="nav-icon">📋</span> Historique</a>
+      <a href="archive.html"><span class="nav-icon">🗄️</span> Archive</a>
+      <a href="ip.html"><span class="nav-icon">🛡️</span> Surveillance IP</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar" id="avatarInitial">A</div>
+        <div class="user-info">
+          <div class="name" id="adminName">Admin</div>
+          <div class="role">Administrateur</div>
+        </div>
+      </div>
+      <button class="btn-logout" id="logoutBtn">Déconnexion</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="admin-main">
+    <div class="topbar">
+      <h1>Dashboard</h1>
+      <div class="topbar-right">
+        <button class="btn btn-outline btn-sm" onclick="refreshDashboard()" title="Actualiser">
+          🔄 Actualiser
+        </button>
+        <button class="theme-toggle-inline" onclick="toggleTheme()" title="Changer le thème">🌙</button>
+        <span class="badge-admin-tag">Admin</span>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <nav class="breadcrumbs">
+        <span>🏠</span>
+        <span class="current">Dashboard</span>
+      </nav>
+      <div class="page-header">
+        <p>Vue d'ensemble de la plateforme et statistiques en temps réel.</p>
+      </div>
+
+      <!-- Enhanced Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon-wrap blue">👥</div>
+          <div>
+            <div class="stat-value" id="statTotal">—</div>
+            <div class="stat-label">Total utilisateurs</div>
+            <div class="stat-change" id="statTotalChange"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap green">✅</div>
+          <div>
+            <div class="stat-value" id="statActifs">—</div>
+            <div class="stat-label">Actifs</div>
+            <div class="stat-change" id="statActifsChange"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap orange">⏳</div>
+          <div>
+            <div class="stat-value" id="statConnectes">—</div>
+            <div class="stat-label">Connectés aujourd'hui</div>
+            <div class="stat-change" id="statConnectesChange"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap purple">📈</div>
+          <div>
+            <div class="stat-value" id="statInscriptions">—</div>
+            <div class="stat-label">Inscriptions ce mois</div>
+            <div class="stat-change" id="statInscriptionsChange"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <!-- User Growth Chart -->
+        <div id="userGrowthChart"></div>
+        
+        <!-- User Status Distribution -->
+        <div id="userStatusChart"></div>
+      </div>
+
+      <!-- Activity Charts -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <!-- Daily Activity -->
+        <div id="dailyActivityChart"></div>
+        
+        <!-- Monthly Registrations -->
+        <div id="monthlyRegistrationsChart"></div>
+      </div>
+
+      <!-- Recent Activity and Users -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <!-- Recent Users -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Utilisateurs récents</h2>
+            <a href="users.html" class="btn btn-outline btn-sm">Voir tous →</a>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr><th>Utilisateur</th><th>Statut</th><th>Inscrit</th></tr>
+              </thead>
+              <tbody id="recentUsers">
+                <!-- Loading skeleton will be inserted here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- System Health -->
+        <div class="card">
+          <div class="card-header">
+            <h2>État du système</h2>
+            <span class="badge badge-success" id="systemStatus">En ligne</span>
+          </div>
+          <div style="padding: 20px;">
+            <div id="systemHealthStats"></div>
+            
+            <div style="margin-top: 20px;">
+              <h4 style="margin-bottom: 12px; color: var(--text);">Métriques</h4>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: var(--text-muted);">Temps de réponse moyen</span>
+                  <span style="color: var(--text); font-weight: 600;" id="avgResponseTime">—</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: var(--text-muted);">Requêtes/minute</span>
+                  <span style="color: var(--text); font-weight: 600;" id="requestsPerMinute">—</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: var(--text-muted);">Erreurs (24h)</span>
+                  <span style="color: var(--text); font-weight: 600;" id="errorCount">—</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: var(--text-muted);">Uptime système</span>
+                  <span style="color: var(--success); font-weight: 600;" id="uptime">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Include all JS modules -->
+  <script src="/js/theme.js"></script>
+  <script src="/js/notifications.js"></script>
+  <script src="/js/loading.js"></script>
+  <script src="/js/modals.js"></script>
+  <script src="/js/charts.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/utils.js"></script>
+  
+  <script>
+    requireAdmin("../user/login.html");
+
+    // Global state
+    let dashboardData = null;
+    let refreshInterval = null;
+
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDashboard();
+      startAutoRefresh();
+    });
+
+    // Logout handler
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      const confirmed = await modals.confirm(
+        "Êtes-vous sûr de vouloir vous déconnecter ?",
+        "Déconnexion"
+      );
+      if (confirmed) {
+        clearToken();
+        window.location.href = "/user/login.html";
+      }
+    });
+
+    // Load dashboard data
+    async function loadDashboard() {
+      // Show loading skeletons
+      showLoadingState();
+      
+      try {
+        const res = await AdminAPI.dashboard();
+        if (!res || !res.ok) {
+          notifications.error("Erreur lors du chargement du dashboard");
+          return;
+        }
+        
+        dashboardData = res.data;
+        renderDashboard(dashboardData);
+        
+        // Load real-time system metrics
+        await loadSystemMetrics();
+        
+      } catch (error) {
+        notifications.error("Erreur de connexion");
+      }
+    }
+
+    // Load real-time system metrics
+    async function loadSystemMetrics() {
+      try {
+        const res = await AdminAPI.systemMetrics();
+        if (res && res.ok) {
+          const { metrics, health, app } = res.data;
+
+          updateSystemHealth({
+            cpu_percent: metrics.cpu.percent,
+            memory_used_gb: metrics.memory.used_gb,
+            memory_total_gb: metrics.memory.total_gb,
+            memory_percent: metrics.memory.percent,
+            disk_free_gb: metrics.disk.free_gb,
+            disk_total_gb: metrics.disk.total_gb,
+            disk_percent: metrics.disk.percent,
+            uptime_formatted: metrics.uptime.formatted,
+            availability_percent: health.availability_percent,
+            health_status: health.status,
+            hostname: metrics.system.hostname,
+            platform: `${metrics.system.platform} ${metrics.system.platform_release}`,
+            avg_response_ms: app?.avg_response_ms,
+            requests_per_minute: app?.requests_per_minute,
+            errors_24h: app?.errors_24h ?? 0,
+            process_count: metrics.processes.total_count,
+          });
+        }
+      } catch (error) {
+        console.warn('Could not load system metrics:', error);
+      }
+    }
+
+    function formatPercent(value, decimals = 1) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return '—';
+      return `${n.toFixed(decimals)}%`;
+    }
+
+    // Show loading state
+    function showLoadingState() {
+      // Stats loading
+      ['statTotal', 'statActifs', 'statConnectes', 'statInscriptions'].forEach(id => {
+        document.getElementById(id).textContent = '—';
+      });
+      
+      // Recent users loading
+      loading.createUserListSkeleton(document.getElementById('recentUsers'), 5);
+      
+      // System metrics loading
+      document.getElementById('avgResponseTime').textContent = '—';
+      document.getElementById('requestsPerMinute').textContent = '—';
+      document.getElementById('errorCount').textContent = '—';
+    }
+
+    // Render dashboard
+    function renderDashboard(data) {
+      const { stats, users, activity, system } = data;
+      
+      // Update stats
+      updateStats(stats);
+      
+      // Render recent users
+      renderRecentUsers(users);
+      
+      // Render charts
+      renderCharts(stats, activity);
+      
+      // Update system health
+      updateSystemHealth(system);
+    }
+
+    // Update stats cards
+    function updateStats(stats) {
+      document.getElementById('statTotal').textContent = stats.total || 0;
+      document.getElementById('statActifs').textContent = stats.actifs || 0;
+      
+      // Use real activity data if available
+      const activityData = dashboardData.activity;
+      const recentStats = activityData.recent_stats || {};
+      
+      document.getElementById('statConnectes').textContent = recentStats.active_users || 0;
+      document.getElementById('statInscriptions').textContent = recentStats.month_registrations || 0;
+      
+      // Calculate change indicators based on real data
+      const weekRegistrations = recentStats.week_registrations || 0;
+      const monthRegistrations = recentStats.month_registrations || 0;
+      const todayLogins = recentStats.today_logins || 0;
+      
+      // Update change indicators with real calculations
+      updateStatChange('statTotalChange', `+${weekRegistrations} cette semaine`, 'positive');
+      updateStatChange('statActifsChange', `${Math.round((stats.actifs / stats.total) * 100)}%`, 'positive');
+      updateStatChange('statConnectesChange', `${todayLogins} aujourd'hui`, 'positive');
+      updateStatChange('statInscriptionsChange', `+${weekRegistrations} cette semaine`, 'positive');
+      
+      // Log real stats
+      console.log('Real Stats:', {
+        total: stats.total,
+        actifs: stats.actifs,
+        activeUsers: recentStats.active_users,
+        monthRegistrations: monthRegistrations,
+        weekRegistrations: weekRegistrations,
+        todayLogins: todayLogins
+      });
+    }
+
+    // Update stat change indicator
+    function updateStatChange(elementId, change, type) {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.textContent = change;
+        element.className = `stat-change ${type}`;
+        element.style.color = type === 'positive' ? 'var(--success)' : 'var(--danger)';
+        element.style.fontSize = '12px';
+        element.style.fontWeight = '500';
+      }
+    }
+
+    // Render recent users
+    function renderRecentUsers(users) {
+      const tbody = document.getElementById('recentUsers');
+      const recent = users.slice(0, 5);
+      
+      if (!recent.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="3" style="color:var(--muted);text-align:center;padding:2rem">
+              Aucun utilisateur récent
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = recent.map(u => `
+        <tr class="fade-in">
+          <td>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div class="avatar" style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">
+                ${(u.prenom?.[0] || '').toUpperCase()}${(u.nom?.[0] || '').toUpperCase()}
+              </div>
+              <div>
+                <div style="font-weight: 500; color: var(--text);">${u.nom} ${u.prenom}</div>
+                <div style="font-size: 11px; color: var(--text-muted);">${u.email}</div>
+              </div>
+            </div>
+          </td>
+          <td>${statusBadge(u.statut)}</td>
+          <td style="font-size: 12px; color: var(--text-muted);">${formatDate(u.created_at)}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Render charts
+    function renderCharts(stats, activity) {
+      // User Growth Chart (Line Chart) - Real data
+      const growthData = activity.user_growth && activity.user_growth.length > 0 
+        ? activity.user_growth 
+        : generateGrowthData(stats.total);
+        
+      charts.createChart('userGrowthChart', {
+        type: 'line',
+        title: 'Croissance des utilisateurs',
+        subtitle: 'Évolution sur les 30 derniers jours',
+        data: growthData,
+        colors: ['#6366f1'],
+        period: '30 derniers jours',
+        height: 250
+      });
+
+      // User Status Distribution (Donut Chart) - Real data
+      const statusData = activity.status_distribution && activity.status_distribution.length > 0
+        ? activity.status_distribution
+        : [
+            { label: 'Actifs', value: stats.actifs || 0 },
+            { label: 'Désactivés', value: stats.desactives || 0 },
+            { label: 'Bannis', value: stats.bannis || 0 },
+            { label: 'En attente', value: stats.en_attente || 0 }
+          ].filter(d => d.value > 0);
+
+      charts.createChart('userStatusChart', {
+        type: 'donut',
+        title: 'Répartition des statuts',
+        subtitle: 'Distribution actuelle',
+        data: statusData,
+        colors: ['#10b981', '#f59e0b', '#ef4444', '#6b7280'],
+        height: 250
+      });
+
+      // Daily Activity (Bar Chart) - Real data
+      const dailyData = activity.daily_activity && activity.daily_activity.length > 0
+        ? activity.daily_activity
+        : generateDailyActivityData();
+        
+      charts.createChart('dailyActivityChart', {
+        type: 'bar',
+        title: 'Activité quotidienne',
+        subtitle: 'Connexions par jour (7 derniers jours)',
+        data: dailyData,
+        colors: ['#8b5cf6'],
+        period: '7 derniers jours',
+        height: 200
+      });
+
+      // Monthly Registrations (Line Chart) - Real data
+      const monthlyData = activity.monthly_registrations && activity.monthly_registrations.length > 0
+        ? activity.monthly_registrations
+        : generateMonthlyData();
+        
+      charts.createChart('monthlyRegistrationsChart', {
+        type: 'line',
+        title: 'Inscriptions mensuelles',
+        subtitle: 'Nouveaux utilisateurs par mois',
+        data: monthlyData,
+        colors: ['#10b981'],
+        period: '6 derniers mois',
+        height: 200
+      });
+      
+      // Log real data usage
+      console.log('Charts rendered with real data:', {
+        userGrowth: activity.user_growth ? 'Real data' : 'Mock data',
+        statusDistribution: activity.status_distribution ? 'Real data' : 'Mock data',
+        dailyActivity: activity.daily_activity ? 'Real data' : 'Mock data',
+        monthlyRegistrations: activity.monthly_registrations ? 'Real data' : 'Mock data'
+      });
+    }
+
+    // Update system health
+    function updateSystemHealth(system) {
+      const cpu = system.cpu_percent ?? 0;
+      const memoryUsed = system.memory_used_gb ?? 0;
+      const memoryTotal = system.memory_total_gb ?? 0;
+      const memoryPercent = system.memory_percent ?? 0;
+      const diskFree = system.disk_free_gb ?? 0;
+      const diskTotal = system.disk_total_gb ?? 0;
+      const uptime = system.uptime_formatted || 'N/A';
+      const availability = system.availability_percent ?? system.uptime_percent ?? 99.9;
+
+      const avgMs = system.avg_response_ms;
+      document.getElementById('avgResponseTime').textContent =
+        avgMs != null ? `${avgMs} ms` : '—';
+
+      const rpm = system.requests_per_minute;
+      document.getElementById('requestsPerMinute').textContent =
+        rpm != null ? String(rpm) : '—';
+
+      document.getElementById('errorCount').textContent =
+        system.errors_24h != null ? String(system.errors_24h) : '0';
+
+      document.getElementById('uptime').textContent = uptime;
+
+      charts.createStatsCards('systemHealthStats', [
+        {
+          value: formatPercent(availability),
+          label: 'Disponibilité',
+        },
+        {
+          value: `${memoryUsed} / ${memoryTotal} GB (${formatPercent(memoryPercent, 0)})`,
+          label: 'Mémoire utilisée',
+        },
+        {
+          value: formatPercent(cpu, 0),
+          label: 'CPU',
+        },
+        {
+          value: `${diskFree} GB libre`,
+          label: 'Stockage libre',
+        },
+      ]);
+      
+      // Update system status badge
+      const statusElement = document.getElementById('systemStatus');
+      const healthStatus = system.health_status || 'healthy';
+      
+      if (statusElement) {
+        statusElement.className = 'badge';
+        if (healthStatus === 'healthy') {
+          statusElement.className += ' badge-success';
+          statusElement.textContent = 'En ligne';
+        } else if (healthStatus === 'warning') {
+          statusElement.className += ' badge-warning';
+          statusElement.textContent = 'Attention';
+        } else if (healthStatus === 'critical') {
+          statusElement.className += ' badge-danger';
+          statusElement.textContent = 'Critique';
+        }
+      }
+      
+      // Show system info in console for debugging
+      console.log('System Info:', {
+        hostname: system.hostname,
+        platform: system.platform,
+        uptime: uptime,
+        cpu: `${cpu}%`,
+        memory: `${memoryUsed}GB / ${memoryTotal}GB`,
+        disk: `${diskFree}GB libre sur ${diskTotal}GB`
+      });
+    }
+
+    // Generate mock growth data
+    function generateGrowthData(total) {
+      const data = [];
+      const days = 30;
+      const baseValue = Math.max(1, total - days);
+      
+      for (let i = days; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const value = baseValue + Math.floor(Math.random() * (days - i + 1));
+        
+        data.push({
+          label: date.getDate().toString(),
+          value: value
+        });
+      }
+      
+      return data;
+    }
+
+    // Generate mock daily activity data
+    function generateDailyActivityData() {
+      const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+      return days.map(day => ({
+        label: day,
+        value: Math.floor(Math.random() * 50) + 10
+      }));
+    }
+
+    // Generate mock monthly data
+    function generateMonthlyData() {
+      const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'];
+      return months.map(month => ({
+        label: month,
+        value: Math.floor(Math.random() * 30) + 5
+      }));
+    }
+
+    // Refresh dashboard
+    async function refreshDashboard() {
+      notifications.info("Actualisation du dashboard...");
+      await loadDashboard();
+      notifications.success("Dashboard actualisé");
+    }
+
+    // Auto-refresh every 5 minutes for dashboard, every 30 seconds for system metrics
+    function startAutoRefresh() {
+      // Dashboard refresh every 5 minutes
+      refreshInterval = setInterval(() => {
+        loadDashboard();
+      }, 5 * 60 * 1000);
+      
+      // System metrics refresh every 30 seconds
+      const systemRefreshInterval = setInterval(() => {
+        loadSystemMetrics();
+      }, 30 * 1000);
+      
+      // Store both intervals for cleanup
+      window.systemRefreshInterval = systemRefreshInterval;
+    }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+      if (window.systemRefreshInterval) {
+        clearInterval(window.systemRefreshInterval);
+      }
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Ctrl+R for refresh
+      if (e.ctrlKey && e.key === 'r') {
+        e.preventDefault();
+        refreshDashboard();
+      }
+    });
+  </script>
+</body>
+</html>
+
+
