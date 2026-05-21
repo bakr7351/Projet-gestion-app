@@ -31,27 +31,24 @@ env/
 .idea/
 .kiro/
 .pytest_cache/
+.hypothesis/
 
 # Environment
 .env
-*.swp
-*.swo
-*~
+.env.local
+.env.development
+.env.test
+.env.production
 
 # OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
 # Logs
 *.log
 logs/
 
-# Database
+# Database (local only)
 *.db
 *.db-journal
 
@@ -68,14 +65,6 @@ test_*.xlsx
 # Tests output
 tests/output/
 
-# Environment variables
-.env.local
-.env.development
-.env.test
-.env.production
-
-# Optimization backups
-.optimization_backups/
-
 # Documentation builds
 docs/_build/
+.optimization_backups/
