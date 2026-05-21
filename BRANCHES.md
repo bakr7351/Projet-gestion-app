@@ -28,8 +28,21 @@ git push origin <ta-branche>
 - `database/*.db`
 - `__pycache__/`, `.pytest_cache/`
 
-## Fusion vers main
+## État des branches (à jour sur GitHub)
 
-1. Ouvrir une PR sur GitHub : `backend` → `main`
-2. Puis `database`, `frontend-admin`, `frontend-user`
-3. Résoudre les conflits sur GitHub ou en local
+| Branche | Statut |
+|---------|--------|
+| `backend` | À jour |
+| `database` | À jour (schema SQLite + legacy) |
+| `frontend-admin` | À jour |
+| `frontend-user` | À jour |
+| `main` | Projet complet fusionné |
+
+## Mettre à jour main après un changement sur une branche
+
+```bash
+git checkout main
+git pull origin main
+git merge backend   # ou frontend-admin, frontend-user, database
+git push origin main
+```
