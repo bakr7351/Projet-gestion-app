@@ -97,6 +97,7 @@
     .badge-absorption  { background: #dbeafe; color: #1d4ed8; }
     .badge-desorption  { background: #fce7f3; color: #9d174d; }
     .badge-mccabe      { background: #d1fae5; color: #065f46; }
+    .badge-sechage     { background: #fef3c7; color: #92400e; }
     .badge-cross       { background: #fef3c7; color: #92400e; }
     .badge-counter     { background: #e0e7ff; color: #3730a3; }
 
@@ -196,6 +197,8 @@
               <option value="desorption">Désorption (tous modes)</option>
               <option value="desorption-counter">Désorption — Contre-courant</option>
               <option value="desorption-cross">Désorption — Courant croisé</option>
+              <option value="mccabe_thiele">McCabe-Thiele</option>
+              <option value="sechage">Séchage Psychrométrique</option>
             </select>
           </div>
           <!-- Delete all -->
@@ -330,6 +333,7 @@
         absorption:   { cls: "badge-absorption",  label: "Absorption" },
         desorption:   { cls: "badge-desorption",  label: "Désorption" },
         mccabe_thiele:{ cls: "badge-mccabe",       label: "McCabe-Thiele" },
+        sechage:      { cls: "badge-sechage",      label: "Séchage" },
       };
       const t = map[type] || { cls: "", label: type };
       
@@ -366,6 +370,14 @@
           <strong>x*</strong> ${p.x_obj ?? "—"}
         </div>`;
       }
+      if (type === "sechage") {
+        return `<div class="params-cell">
+          <strong>T1</strong> ${p.T1 ?? "—"}°C &nbsp;
+          <strong>T2</strong> ${p.T2 ?? "—"}°C<br>
+          <strong>Débit</strong> ${p.debit_m3_h ?? "—"} m³/h &nbsp;
+          <strong>HR sortie</strong> ${p.sortie_val ?? "—"}%
+        </div>`;
+      }
       // Generic fallback
       const keys = Object.keys(p).slice(0, 4);
       if (!keys.length) return '<div class="params-cell">—</div>';
@@ -389,6 +401,14 @@
           <strong>S</strong> ${r.facteur_S ?? "—"}
         </div>`;
       }
+      if (type === "sechage") {
+        const bilans = r.bilans || {};
+        return `<div class="params-cell">
+          <strong>Eau évaporée</strong> ${bilans.eau_evaporee_kg_h ?? "—"} kg/h<br>
+          <strong>P. préchauf.</strong> ${bilans.puissance_prechauffage_kW ?? "—"} kW &nbsp;
+          <strong>P. séchage</strong> ${bilans.puissance_sechage_kW ?? "—"} kW
+        </div>`;
+      }
       const keys = Object.keys(r).slice(0, 3);
       if (!keys.length) return '<div class="params-cell">—</div>';
       return `<div class="params-cell">${keys.map(k => `<strong>${k}</strong> ${r[k]}`).join(" &nbsp; ")}</div>`;
@@ -398,6 +418,9 @@
       const isCross = entry.input_parameters?.flow_type === 'cross-current';
       if (entry.calculation_type === "desorption") {
         return `/user/desorption.html?history_id=${entry.id}${isCross ? '&mode=cross-current' : ''}`;
+      }
+      if (entry.calculation_type === "sechage") {
+        return `/sechage`;
       }
       return `/user/absorption.html?history_id=${entry.id}${isCross ? '&mode=cross-current' : ''}`;
     }
@@ -506,6 +529,10 @@
               return calcType === "desorption" && flowType === 'counter-current';
             case "desorption-cross":
               return calcType === "desorption" && flowType === 'cross-current';
+            case "mccabe_thiele":
+              return calcType === "mccabe_thiele";
+            case "sechage":
+              return calcType === "sechage";
             default:
               return true;
           }

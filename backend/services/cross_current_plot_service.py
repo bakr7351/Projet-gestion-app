@@ -168,7 +168,6 @@ def build_absorption_plots(resultats: dict[str, Any]) -> Tuple[str | None, str |
         ax.set_xlim(-1, 7)
         ax.set_ylim(-1, 7.5)
         ax.axis("off")
-        ax.set_title("Absorption - Schéma de la colonne", fontsize=13, fontweight="bold", pad=15)
         plt.tight_layout()
         return _fig_to_base64(fig)
 
@@ -323,7 +322,6 @@ def build_desorption_plots(resultats: dict[str, Any]) -> Tuple[str | None, str |
         ax.set_xlim(-1, 7)
         ax.set_ylim(-1, 7.5)
         ax.axis("off")
-        ax.set_title("Désorption - Schéma de la colonne", fontsize=13, fontweight="bold", pad=15)
         plt.tight_layout()
         return _fig_to_base64(fig)
 

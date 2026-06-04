@@ -26,7 +26,7 @@ class CalculationHistory(db.Model):
         index=True
     )
     calculation_type = db.Column(
-        db.Enum('absorption', 'desorption', 'mccabe_thiele', name='calc_type_enum'),
+        db.Enum('absorption', 'desorption', 'mccabe_thiele', 'sechage', name='calc_type_enum'),
         nullable=False
     )
     custom_name = db.Column(db.String(100), nullable=True)

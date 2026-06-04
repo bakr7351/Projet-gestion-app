@@ -6,6 +6,7 @@
     <title>Calcul d'Absorption - Accès Libre</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist@2.27.0/plotly.min.js"></script>
+    <script src="/js/plotly-download-fix.js" defer></script>
     <style>
         * { 
             margin: 0; 
@@ -904,7 +905,17 @@
             const config = {
                 responsive: true,
                 displayModeBar: true,
-                displaylogo: false
+                displaylogo: false,
+                toImageButtonOptions: {
+                    format: 'svg',
+                    filename: 'graphique_absorption',
+                    height: 1080,
+                    width: 1920,
+                    scale: 1
+                },
+                modeBarButtonsToRemove: [],
+                staticPlot: false,
+                plotGlPixelRatio: 2
             };
             
             Plotly.newPlot(containerId, plotData.data, plotData.layout, config);

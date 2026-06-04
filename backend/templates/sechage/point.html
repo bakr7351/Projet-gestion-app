@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculateur de Point Psychrométrique - OpUnit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --card-bg: white;
+            --text-primary: #333;
+            --text-secondary: #555;
+            --border-color: #ddd;
+            --input-bg: white;
+            --input-border: #ddd;
+            --info-bg: #e3f2fd;
+            --info-border: #4facfe;
+            --param-bg: #f8f9fa;
+            --shadow: rgba(0,0,0,0.2);
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(135deg, #0f2027 0%, #203a43 100%);
+            --card-bg: #1a2332;
+            --text-primary: #e4e4e4;
+            --text-secondary: #b8b8b8;
+            --border-color: #2a5298;
+            --input-bg: #0f1923;
+            --input-border: #2a5298;
+            --info-bg: #1a3a52;
+            --info-border: #4facfe;
+            --param-bg: #0f1923;
+            --shadow: rgba(0,0,0,0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px var(--shadow);
+            transition: background 0.3s ease;
+        }
+
+        .card h2 {
+            color: #4facfe;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #4facfe;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s, background 0.3s;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .param-group {
+            background: var(--param-bg);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            transition: background 0.3s ease;
+        }
+
+        .param-group h3 {
+            color: #4facfe;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin-top: 15px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .result-item {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .result-item .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .result-item .value {
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+
+        .diagram-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .diagram-container img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .error {
+            background-color: #fee;
+            border: 2px solid #f66;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: var(--info-bg);
+            border-left: 4px solid var(--info-border);
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .info-box h3 {
+            color: #4facfe;
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            line-height: 1.8;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(20deg) scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        @media (max-width: 968px) {
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Changer le thème">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-dot-circle"></i> Calculateur de Point Psychrométrique</h1>
+            <p>Déterminez un point à partir de deux paramètres</p>
+        </div>
+
+        {% if erreur %}
+        <div class="error">
+            <strong><i class="fas fa-exclamation-triangle"></i> Erreur:</strong> {{ erreur }}
+        </div>
+        {% endif %}
+
+        <div class="content-wrapper">
+            <!-- Formulaire -->
+            <div class="card">
+                <h2><i class="fas fa-sliders-h"></i> Paramètres</h2>
+                <form method="POST">
+                    <div class="param-group">
+                        <h3>Paramètre 1</h3>
+                        <div class="form-group">
+                            <label>Type de paramètre</label>
+                            <select name="param1" required>
+                                <option value="T">Température sèche (°C)</option>
+                                <option value="RH">Humidité relative (%)</option>
+                                <option value="W">Humidité absolue (g/kg)</option>
+                                <option value="Twb">Température humide (°C)</option>
+                                <option value="Tdp">Température de rosée (°C)</option>
+                                <option value="h">Enthalpie (kJ/kg)</option>
+                                <option value="v">Volume spécifique (m³/kg)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Valeur</label>
+                            <input type="number" name="value1" step="0.01" required>
+                        </div>
+                    </div>
+
+                    <div class="param-group">
+                        <h3>Paramètre 2</h3>
+                        <div class="form-group">
+                            <label>Type de paramètre</label>
+                            <select name="param2" required>
+                                <option value="T">Température sèche (°C)</option>
+                                <option value="RH" selected>Humidité relative (%)</option>
+                                <option value="W">Humidité absolue (g/kg)</option>
+                                <option value="Twb">Température humide (°C)</option>
+                                <option value="Tdp">Température de rosée (°C)</option>
+                                <option value="h">Enthalpie (kJ/kg)</option>
+                                <option value="v">Volume spécifique (m³/kg)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Valeur</label>
+                            <input type="number" name="value2" step="0.01" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn">
+                        <i class="fas fa-calculator"></i> Calculer
+                    </button>
+
+                    <a href="/sechage" class="btn btn-secondary" style="text-decoration: none; display: block;">
+                        <i class="fas fa-arrow-left"></i> Retour au séchage
+                    </a>
+                </form>
+
+                <div class="info-box">
+                    <h3><i class="fas fa-info-circle"></i> Paramètres disponibles</h3>
+                    <ul>
+                        <li><strong>T:</strong> Température sèche (°C)</li>
+                        <li><strong>RH:</strong> Humidité relative (%)</li>
+                        <li><strong>W:</strong> Humidité absolue (g/kg air sec)</li>
+                        <li><strong>Twb:</strong> Température humide (°C)</li>
+                        <li><strong>Tdp:</strong> Température de rosée (°C)</li>
+                        <li><strong>h:</strong> Enthalpie (kJ/kg air sec)</li>
+                        <li><strong>v:</strong> Volume spécifique (m³/kg air sec)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Résultats -->
+            <div class="card">
+                {% if results %}
+                <h2><i class="fas fa-chart-bar"></i> Résultats</h2>
+                
+                <div class="results-grid">
+                    <div class="result-item">
+                        <div class="label">T (°C)</div>
+                        <div class="value">{{ results.T }}</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="label">HR (%)</div>
+                        <div class="value">{{ results.RH }}</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="label">w (g/kg)</div>
+                        <div class="value">{{ results.w }}</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="label">h (kJ/kg)</div>
+                        <div class="value">{{ results.h }}</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="label">Twb (°C)</div>
+                        <div class="value">{{ results.Twb }}</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="label">Tdp (°C)</div>
+                        <div class="value">{{ results.Tdp }}</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="label">v (m³/kg)</div>
+                        <div class="value">{{ results.v }}</div>
+                    </div>
+                </div>
+
+                <div class="diagram-container">
+                    <h3>Position sur le diagramme</h3>
+                    <img src="/static/sechage/plot_point.png?t={{ plot_ts }}" alt="Point sur diagramme psychrométrique">
+                </div>
+                {% else %}
+                <h2><i class="fas fa-lightbulb"></i> Comment utiliser</h2>
+                <p style="line-height: 1.8; color: var(--text-secondary);">
+                    Ce calculateur permet de déterminer toutes les propriétés psychrométriques d'un point 
+                    à partir de <strong>deux paramètres indépendants</strong>.<br><br>
+                    
+                    <strong>Exemples de combinaisons:</strong><br>
+                    • Température sèche + Humidité relative<br>
+                    • Température sèche + Température humide<br>
+                    • Température humide + Humidité relative<br>
+                    • Température sèche + Enthalpie<br><br>
+                    
+                    Une fois calculé, le point sera affiché sur le diagramme psychrométrique 
+                    avec toutes ses propriétés.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update icon
+            const icon = document.querySelector('.theme-toggle i');
+            icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // Load saved theme
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            const icon = document.querySelector('.theme-toggle i');
+            icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        });
+    </script>
+</body>
+</html>

@@ -118,6 +118,20 @@ def send_notification(admin_id: int, target_id: int, content: str) -> tuple:
     if not user:
         return error_response("Ressource introuvable"), 404
 
+    # Create notification in database
+    from backend.models.notification import Notification
+    notification = Notification.create_notification(
+        user_id=target_id,
+        notification_type='admin_message',
+        title='Message de l\'administrateur',
+        message=content,
+        priority='high'
+    )
+
+    # Send email notification
     email_service.send_notification(user, content)
+    
+    # Log the action
     audit_service.log_action("notification", target_id=target_id, author_id=admin_id, details=content)
-    return success_response("Notification envoyée."), 200
+    
+    return success_response("Notification envoyée et enregistrée."), 200

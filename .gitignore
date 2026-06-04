@@ -1,44 +1,24 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
 .Python
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
 
 # Virtual Environment
 .venv/
 venv/
-ENV/
 env/
 
-# IDE / tooling
+# IDE
 .vscode/
 .idea/
-.kiro/
 .pytest_cache/
-.hypothesis/
 
 # Environment
 .env
-.env.local
-.env.development
-.env.test
-.env.production
 
 # OS
 .DS_Store
@@ -46,25 +26,11 @@ Thumbs.db
 
 # Logs
 *.log
-logs/
 
-# Database (local only)
-*.db
-*.db-journal
+# Database (local)
+database/*.db
+database/*.db-journal
 
-# Temporary files
-*.tmp
-*.temp
-*.bak
-*.backup
-
-# Excel test artifacts
-test_*.xlsx
-*.xlsx.tmp
-
-# Tests output
-tests/output/
-
-# Documentation builds
-docs/_build/
-.optimization_backups/
+# Generated files
+static/sechage/*.png
+static/sechage/*.pdf

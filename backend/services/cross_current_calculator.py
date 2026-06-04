@@ -786,11 +786,6 @@ class CrossCurrentCalculator:
             
             # --- Configuration du layout ---
             fig.update_layout(
-                title=dict(
-                    text='Schéma de la Colonne — Absorption à courant croisé',
-                    font=dict(size=15, color='#e2e8f0'),
-                    x=0.5, xanchor='center'
-                ),
                 xaxis=dict(
                     range=[0, 11],
                     showgrid=False,
@@ -958,11 +953,6 @@ class CrossCurrentCalculator:
             )
 
             fig.update_layout(
-                title=dict(
-                    text='Schéma de la Colonne — Désorption à courant croisé',
-                    font=dict(size=15, color='#e2e8f0'),
-                    x=0.5, xanchor='center'
-                ),
                 xaxis=dict(range=[0, 11], showgrid=False, showticklabels=False, zeroline=False, visible=False),
                 yaxis=dict(range=[0, 10], showgrid=False, showticklabels=False, zeroline=False, visible=False,
                            scaleanchor='x', scaleratio=1),
