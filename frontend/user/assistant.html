@@ -617,17 +617,105 @@
                 </div>
             ` : '';
 
+            // Generate contextual suggestions for assistant messages
+            const suggestions = sender === 'assistant' ? generateSuggestions(content) : '';
+
             messageDiv.innerHTML = `
                 <div class="message-avatar">${avatar}</div>
                 <div class="message-content">
                     <div class="message-bubble" id="${messageId}">${formattedContent}</div>
                     <div class="message-time">${time}</div>
                     ${feedbackButtons}
+                    ${suggestions}
                 </div>
             `;
 
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function generateSuggestions(content) {
+            // Contextual suggestions based on keywords in the response
+            const lowerContent = content.toLowerCase();
+            const suggestions = [];
+
+            // Absorption-related suggestions
+            if (lowerContent.includes('absorption') || lowerContent.includes('étage')) {
+                suggestions.push('Comment calculer le facteur A ?');
+                suggestions.push('Quelle est la formule complète ?');
+                suggestions.push('Donnez-moi un exemple pratique');
+            }
+
+            // Desorption-related suggestions
+            if (lowerContent.includes('désorption') || lowerContent.includes('stripping')) {
+                suggestions.push('Comment optimiser la désorption ?');
+                suggestions.push('Quelle température utiliser ?');
+                suggestions.push('Expliquez le facteur S');
+            }
+
+            // McCabe-Thiele-related suggestions
+            if (lowerContent.includes('mccabe') || lowerContent.includes('diagramme')) {
+                suggestions.push('Comment tracer le diagramme ?');
+                suggestions.push('Interprétez les courbes');
+                suggestions.push('Calculer la pente opératoire');
+            }
+
+            // Séchage-related suggestions
+            if (lowerContent.includes('séchage') || lowerContent.includes('psychrométrique')) {
+                suggestions.push('Comment lire un diagramme psychrométrique ?');
+                suggestions.push('Calculer l\'enthalpie');
+                suggestions.push('Optimiser le séchage');
+            }
+
+            // Formula-related suggestions
+            if (lowerContent.includes('formule') || lowerContent.includes('équation')) {
+                suggestions.push('Montrez-moi un calcul complet');
+                suggestions.push('Quelles sont les hypothèses ?');
+                suggestions.push('Comment l\'appliquer ?');
+            }
+
+            // Calculation-related suggestions
+            if (lowerContent.includes('calculer') || lowerContent.includes('calcul')) {
+                suggestions.push('Expliquez étape par étape');
+                suggestions.push('Quelles sont les unités ?');
+                suggestions.push('Donnez un exemple numérique');
+            }
+
+            // Default suggestions if no specific context
+            if (suggestions.length === 0) {
+                const defaultSuggestions = [
+                    'Pouvez-vous donner plus de détails ?',
+                    'Montrez-moi un exemple',
+                    'Comment utiliser cette information ?',
+                    'Y a-t-il des limitations ?',
+                    'Expliquez différemment',
+                    'Quelle est la précision ?'
+                ];
+                // Pick 3 random default suggestions
+                for (let i = 0; i < 3; i++) {
+                    const randomIndex = Math.floor(Math.random() * defaultSuggestions.length);
+                    const suggestion = defaultSuggestions[randomIndex];
+                    if (!suggestions.includes(suggestion)) {
+                        suggestions.push(suggestion);
+                        defaultSuggestions.splice(randomIndex, 1);
+                    }
+                }
+            }
+
+            // Limit to 3-4 suggestions
+            const limitedSuggestions = suggestions.slice(0, Math.min(4, suggestions.length));
+
+            if (limitedSuggestions.length === 0) return '';
+
+            return `
+                <div class="quick-questions" style="margin-top: 1rem;">
+                    ${limitedSuggestions.map(s => `
+                        <div class="quick-question" onclick="sendQuickQuestion('${s.replace(/'/g, "\\'")}')">
+                            ${s}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
         }
 
         function giveFeedback(messageId, type) {

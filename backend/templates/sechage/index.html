@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Séchage par Entraînement - OpUnit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: white;
+            --text-primary: #333;
+            --text-secondary: #555;
+            --border-color: #ddd;
+            --input-bg: white;
+            --input-border: #ddd;
+            --table-hover: #f5f5f5;
+            --shadow: rgba(0,0,0,0.2);
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --card-bg: #0f3460;
+            --text-primary: #e4e4e4;
+            --text-secondary: #b8b8b8;
+            --border-color: #2a5298;
+            --input-bg: #16213e;
+            --input-border: #2a5298;
+            --table-hover: #1a4d8f;
+            --shadow: rgba(0,0,0,0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px var(--shadow);
+            transition: background 0.3s ease;
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s, background 0.3s;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .inline-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .results-section {
+            display: grid;
+            gap: 20px;
+        }
+
+        .diagram-container {
+            text-align: center;
+        }
+
+        .diagram-container img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .results-table th {
+            background-color: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .results-table tr:hover {
+            background-color: var(--table-hover);
+        }
+
+        .results-table td {
+            color: var(--text-primary);
+        }
+
+        .bilans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .bilan-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .bilan-item .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .bilan-item .value {
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .error {
+            background-color: #fee;
+            border: 2px solid #f66;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-tertiary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(20deg) scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        @media (max-width: 968px) {
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Changer le thème">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-wind"></i> Séchage par Entraînement</h1>
+            <p>Calcul psychrométrique pour opérations de séchage</p>
+        </div>
+
+        {% if erreur %}
+        <div class="error">
+            <strong><i class="fas fa-exclamation-triangle"></i> Erreur:</strong> {{ erreur }}
+        </div>
+        {% endif %}
+
+        <div class="content-wrapper">
+            <!-- Formulaire de saisie -->
+            <div class="card">
+                <h2><i class="fas fa-calculator"></i> Paramètres du procédé</h2>
+                <form method="POST">
+                    <div class="form-group">
+                        <label>Point 1 - Température air ambiant (°C)</label>
+                        <input type="number" name="T1" step="0.1" value="20" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Point 1 - Humidité initiale</label>
+                        <div class="inline-group">
+                            <select name="humidite_init_type" required>
+                                <option value="HR">Humidité relative (%)</option>
+                                <option value="W">Humidité absolue (g/kg)</option>
+                                <option value="Twb">Température humide (°C)</option>
+                                <option value="Tdp">Température de rosée (°C)</option>
+                                <option value="h">Enthalpie (kJ/kg)</option>
+                            </select>
+                            <input type="number" name="humidite_init_val" step="0.01" value="60" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Débit volumique d'air (m³/h)</label>
+                        <input type="number" name="debit_m3_h" step="0.1" value="1000" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Point 2 - Température après préchauffage (°C)</label>
+                        <input type="number" name="T2" step="0.1" value="60" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Point 3 - Conditions de sortie</label>
+                        <div class="inline-group">
+                            <select name="sortie_type" required>
+                                <option value="HR">Humidité relative (%)</option>
+                                <option value="W">Humidité absolue (g/kg)</option>
+                                <option value="Twb">Température humide (°C)</option>
+                                <option value="h">Enthalpie (kJ/kg)</option>
+                            </select>
+                            <input type="number" name="sortie_val" step="0.01" value="30" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" name="adiabatique">
+                            Séchage adiabatique
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Point 3 - Température mesurée (°C, optionnel)</label>
+                        <input type="number" name="T3_mesure" step="0.1" placeholder="Laisser vide pour estimation automatique">
+                    </div>
+
+                    <button type="submit" class="btn">
+                        <i class="fas fa-play"></i> Calculer
+                    </button>
+                </form>
+
+                <div class="nav-buttons">
+                    <a href="/sechage/point" class="btn btn-secondary" style="text-decoration: none; display: block;">
+                        <i class="fas fa-dot-circle"></i> Calculateur de point
+                    </a>
+                    <a href="/" class="btn btn-tertiary" style="text-decoration: none; display: block;">
+                        <i class="fas fa-home"></i> Accueil
+                    </a>
+                </div>
+            </div>
+
+            <!-- Résultats -->
+            <div class="card">
+                {% if resultats %}
+                <h2><i class="fas fa-chart-line"></i> Résultats de simulation</h2>
+                
+                <h3>Points du procédé</h3>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Point</th>
+                            <th>T (°C)</th>
+                            <th>HR (%)</th>
+                            <th>w (g/kg)</th>
+                            <th>h (kJ/kg)</th>
+                            <th>v (m³/kg)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for point in resultats.points %}
+                        <tr>
+                            <td><strong>{{ point.nom }}</strong></td>
+                            <td>{{ point.T }}</td>
+                            <td>{{ point.HR }}</td>
+                            <td>{{ point.w }}</td>
+                            <td>{{ point.h }}</td>
+                            <td>{{ point.v }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top: 30px;">Bilans</h3>
+                <div class="bilans-grid">
+                    <div class="bilan-item">
+                        <div class="label">Eau évaporée</div>
+                        <div class="value">{{ resultats.bilans.eau_evaporee_kg_h }}</div>
+                        <div class="label">kg/h</div>
+                    </div>
+                    <div class="bilan-item">
+                        <div class="label">Puissance préchauffage</div>
+                        <div class="value">{{ resultats.bilans.puissance_prechauffage_kW }}</div>
+                        <div class="label">kW</div>
+                    </div>
+                    <div class="bilan-item">
+                        <div class="label">Puissance séchage</div>
+                        <div class="value">{{ resultats.bilans.puissance_sechage_kW }}</div>
+                        <div class="label">kW</div>
+                    </div>
+                    <div class="bilan-item">
+                        <div class="label">Débit massique air sec</div>
+                        <div class="value">{{ resultats.bilans.debit_mass_as_kg_h }}</div>
+                        <div class="label">kg/h</div>
+                    </div>
+                </div>
+
+                <div class="diagram-container" style="margin-top: 30px;">
+                    <h3>Diagramme Psychrométrique</h3>
+                    <img src="/static/sechage/plot.png?t={{ plot_ts }}" 
+                         alt="Diagramme psychrométrique"
+                         onerror="console.error('Erreur de chargement du diagramme'); this.style.border='2px solid red';"
+                         onload="console.log('Diagramme chargé avec succès');">
+                </div>
+
+                <a href="/sechage/pdf" class="btn" style="text-decoration: none; display: block; margin-top: 20px;">
+                    <i class="fas fa-file-pdf"></i> Télécharger PDF
+                </a>
+
+                <button onclick="saveCalculation()" class="btn btn-secondary" style="margin-top: 15px;">
+                    <i class="fas fa-save"></i> Enregistrer dans l'historique
+                </button>
+                
+                <div id="saveAlert" style="display: none; margin-top: 15px; padding: 15px; border-radius: 8px;"></div>
+                {% else %}
+                <h2><i class="fas fa-info-circle"></i> Instructions</h2>
+                <p style="line-height: 1.8; color: var(--text-secondary);">
+                    <strong>Séchage par entraînement</strong> est une opération unitaire où un solide humide est séché 
+                    en contact avec un air chaud.<br><br>
+                    
+                    <strong>Paramètres à saisir:</strong><br>
+                    • <strong>Point 1:</strong> Conditions ambiantes de l'air<br>
+                    • <strong>Débit:</strong> Quantité d'air utilisée<br>
+                    • <strong>Point 2:</strong> Air après réchauffage<br>
+                    • <strong>Point 3:</strong> Air après contact avec le solide<br><br>
+                    
+                    Le diagramme psychrométrique montre l'évolution de l'air à travers le procédé.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Store calculation data
+        let calculationData = null;
+
+        {% if resultats %}
+        calculationData = {
+            T1: {{ request.form.get('T1', 0) }},
+            humidite_init_type: "{{ request.form.get('humidite_init_type', 'HR') }}",
+            humidite_init_val: {{ request.form.get('humidite_init_val', 0) }},
+            debit_m3_h: {{ request.form.get('debit_m3_h', 0) }},
+            T2: {{ request.form.get('T2', 0) }},
+            sortie_type: "{{ request.form.get('sortie_type', 'HR') }}",
+            sortie_val: {{ request.form.get('sortie_val', 0) }},
+            adiabatique: {{ 'true' if request.form.get('adiabatique') else 'false' }},
+            T3_mesure: {{ request.form.get('T3_mesure', 'null') }},
+            points: {{ resultats.points | tojson }},
+            bilans: {{ resultats.bilans | tojson }}
+        };
+        {% endif %}
+
+        // Save calculation to history
+        async function saveCalculation() {
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                showAlert('Pour enregistrer vos calculs, veuillez vous <a href="/user/login.html" style="color: white; text-decoration: underline;">connecter</a>', 'error');
+                return;
+            }
+
+            if (!calculationData) {
+                showAlert('Aucun calcul à enregistrer', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/sechage/api/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(calculationData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('✓ Calcul enregistré dans votre historique', 'success');
+                } else {
+                    showAlert('Erreur: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Erreur de connexion au serveur', 'error');
+            }
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('saveAlert');
+            alertDiv.style.display = 'block';
+            alertDiv.innerHTML = message;
+            
+            if (type === 'success') {
+                alertDiv.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                alertDiv.style.color = 'white';
+            } else {
+                alertDiv.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+                alertDiv.style.color = 'white';
+            }
+
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update icon
+            const icon = document.querySelector('.theme-toggle i');
+            icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // Load saved theme
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            const icon = document.querySelector('.theme-toggle i');
+            icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        });
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculs Chimiques - Application d'Absorption et Désorption</title>
+    <title>OpUnit - Application d'Absorption et Désorption</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -100,7 +100,7 @@
         
         .access-options {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 30px;
             margin-bottom: 40px;
         }
@@ -244,7 +244,18 @@
 
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-flask"></i> Calculs Chimiques</h1>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 1rem;">
+                <svg width="60" height="60" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="30" cy="50" r="25" fill="none" stroke="#6366f1" stroke-width="5"/>
+                    <path d="M 30 30 Q 30 20, 30 25 Q 34 28, 30 40 Q 26 28, 30 25 Z" fill="#3b82f6" opacity="0.8"/>
+                    <path d="M 20 65 Q 30 60, 40 65 Q 50 70, 60 65" fill="none" stroke="#3b82f6" stroke-width="3"/>
+                    <path d="M 60 35 L 60 60 Q 60 70, 70 70 Q 80 70, 80 60 L 80 35" fill="none" stroke="#f59e0b" stroke-width="6" stroke-linecap="round"/>
+                    <path d="M 65 25 Q 65 20, 67 18" stroke="#f59e0b" stroke-width="2" fill="none" opacity="0.7"/>
+                    <path d="M 70 22 Q 70 17, 72 15" stroke="#f59e0b" stroke-width="2" fill="none" opacity="0.7"/>
+                    <path d="M 75 25 Q 75 20, 77 18" stroke="#f59e0b" stroke-width="2" fill="none" opacity="0.7"/>
+                </svg>
+                <h1 style="margin: 0;"><span style="color: #6366f1; font-weight: 800;">Op</span><span style="color: #f59e0b; font-weight: 800;">Unit</span></h1>
+            </div>
             <p>Application professionnelle pour les calculs d'absorption et de désorption (contre-courant et courant croisé)</p>
         </div>
 
@@ -302,6 +313,24 @@
                     </a>
                 </div>
             </div>
+
+            <div class="access-card">
+                <div class="icon">
+                    <i class="fas fa-wind"></i>
+                </div>
+                <h3>Séchage Psychrométrique</h3>
+                <p>Calcul du séchage par entraînement avec diagramme psychrométrique. Bilans massiques et énergétiques.</p>
+                <div style="margin-bottom: 15px;">
+                    <a href="/sechage" class="btn">
+                        <i class="fas fa-wind"></i> Module Séchage
+                    </a>
+                </div>
+                <div>
+                    <a href="/sechage/point" class="btn btn-outline">
+                        <i class="fas fa-dot-circle"></i> Calculateur de Point
+                    </a>
+                </div>
+            </div>
         </div>
 
         <div class="features">
@@ -325,6 +354,23 @@
                 <h4>Mode Sombre</h4>
                 <p>Interface adaptable jour/nuit</p>
             </div>
+        </div>
+
+        <!-- Footer avec lien À Propos -->
+        <div style="text-align: center; margin-top: 60px; padding: 30px; background: var(--card-bg); border-radius: 15px; box-shadow: 0 5px 15px var(--shadow);">
+            <p style="opacity: 0.8; margin-bottom: 15px;">
+                <i class="fas fa-info-circle"></i>
+                Besoin d'en savoir plus sur ce projet ?
+            </p>
+            <a href="/about" class="btn" style="margin-right: 15px;">
+                <i class="fas fa-book-open"></i> Découvrir le Projet
+            </a>
+            <a href="mailto:lesinss323@gmail.com" class="btn btn-outline">
+                <i class="fas fa-envelope"></i> Nous Contacter
+            </a>
+            <p style="opacity: 0.6; margin-top: 20px; font-size: 0.9rem;">
+                &copy; 2026 OpUnit - Tous droits réservés
+            </p>
         </div>
     </div>
 

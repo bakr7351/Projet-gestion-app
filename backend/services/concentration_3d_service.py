@@ -321,15 +321,6 @@ class Concentration3DService:
                 borderpad=8
             )
             
-            # Titre
-            fig_schema.add_annotation(
-                x=0.05, y=0.95,
-                text="Colonne d'Absorption a contre-courant",
-                showarrow=False,
-                font=dict(size=18, color='#1e293b', family='Arial Black'),
-                xanchor='left'
-            )
-            
             fig_schema.update_layout(
                 xaxis=dict(range=[0, 1], showgrid=False, showticklabels=False, zeroline=False),
                 yaxis=dict(range=[0, 1], showgrid=False, showticklabels=False, zeroline=False),
@@ -668,15 +659,6 @@ class Concentration3DService:
                 bordercolor='#3b82f6',
                 borderwidth=3,
                 borderpad=8
-            )
-            
-            # Titre
-            fig_schema.add_annotation(
-                x=0.05, y=0.95,
-                text="Colonne d'Desorption a contre-courant",
-                showarrow=False,
-                font=dict(size=18, color='#1e293b', family='Arial Black'),
-                xanchor='left'
             )
             
             fig_schema.update_layout(

@@ -6,6 +6,7 @@
     <title>Graphiques McCabe-Thiele - Calculs Chimiques</title>
     <link rel="stylesheet" href="/css/style.css">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="/js/plotly-download-fix.js" defer></script>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -575,16 +576,32 @@
         }
 
         function displayGraphs(data) {
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                displaylogo: false,
+                toImageButtonOptions: {
+                    format: 'svg',
+                    filename: 'graphique_mccabe_thiele',
+                    height: 1080,
+                    width: 1920,
+                    scale: 1
+                },
+                modeBarButtonsToRemove: [],
+                staticPlot: false,
+                plotGlPixelRatio: 2
+            };
+            
             // Afficher le graphique McCabe-Thiele 2D
             if (data.mccabe_thiele_graph) {
                 const graphData = JSON.parse(data.mccabe_thiele_graph);
-                Plotly.newPlot('mccabe2d', graphData.data, graphData.layout, {responsive: true});
+                Plotly.newPlot('mccabe2d', graphData.data, graphData.layout, config);
             }
 
             // Afficher le graphique 3D
             if (data.surface_3d_graph) {
                 const surface3dData = JSON.parse(data.surface_3d_graph);
-                Plotly.newPlot('surface3d', surface3dData.data, surface3dData.layout, {responsive: true});
+                Plotly.newPlot('surface3d', surface3dData.data, surface3dData.layout, config);
             }
         }
 
